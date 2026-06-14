@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lua de Mel no Japão – Angelo & Dani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── RESET & VARIÁVEIS ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-color: #f7f9f7;
+    --lilac-pastel: #e5d9f2;
+    --lilac-dark: #a390e4;
+    --green-pastel: #d0f4de;
+    --green-dark: #82b596;
+    --ink: #4a4a59;
+    --muted: #8b8b9e;
+    --white: #ffffff;
+    --border: #eceaf3;
+    --radius: 24px;
+    --radius-sm: 12px;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── ANIMAÇÕES DE FUNDO ── */
+  .floating-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .float-item {
+    position: absolute; font-size: 24px; opacity: 0.3;
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(110vh) rotate(360deg) translateX(50px); opacity: 0; }
+  }
+
+  /* ── ANIMAÇÕES UI ── */
+  @keyframes floatUI {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+  }
+  @keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes pulseSoft {
+    0% { box-shadow: 0 0 0 0 rgba(163, 144, 228, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(163, 144, 228, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(163, 144, 228, 0); }
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--lilac-pastel) 0%, var(--green-pastel) 100%);
+    padding: 100px 40px 80px; position: relative;
+    border-radius: 0 0 40px 40px;
+    box-shadow: 0 10px 40px rgba(163, 144, 228, 0.15);
+    z-index: 10; text-align: center; overflow: hidden;
+  }
+  .hero::after {
+    content: ""; position: absolute; bottom: -50px; left: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-eyebrow {
+    font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--lilac-dark); font-weight: 800; margin-bottom: 20px;
+    display: inline-block; background: rgba(255, 255, 255, 0.6);
+    padding: 8px 16px; border-radius: 30px; backdrop-filter: blur(10px);
+    animation: floatUI 4s ease-in-out infinite;
+  }
+  .hero h1 {
+    font-family: 'Lora', serif; font-size: clamp(40px, 8vw, 72px);
+    font-weight: 600; line-height: 1.1; margin-bottom: 16px; color: #3b3155;
+  }
+  .hero-sub { font-size: 18px; color: #5a5a6b; margin-bottom: 40px; font-weight: 400; }
+  .hero-stats { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; padding-top: 40px; }
+  .stat-card {
+    background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px);
+    padding: 16px 32px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+    transition: transform 0.3s ease;
+  }
+  .stat-card:hover { transform: translateY(-5px) scale(1.05); }
+  .stat-num { font-size: 36px; font-weight: 700; color: var(--lilac-dark); font-family: 'Lora', serif; }
+  .stat-lbl { font-size: 12px; opacity: 0.8; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 900px; margin: -30px auto 0; padding: 40px 24px 80px; position: relative; z-index: 10; }
+
+  /* ── FILTROS ── */
+  .filters {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 50px;
+    background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px);
+    padding: 16px; border-radius: 30px;
+    box-shadow: 0 10px 30px rgba(163, 144, 228, 0.08);
+    border: 1px solid rgba(255,255,255,1);
+  }
+  .filter-btn {
+    padding: 12px 24px; border-radius: 999px;
+    border: none; background: transparent;
+    color: var(--muted); font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .filter-btn:hover { background: var(--green-pastel); color: var(--green-dark); }
+  .filter-btn.active { background: var(--lilac-dark); color: #fff; box-shadow: 0 4px 15px rgba(163, 144, 228, 0.4); animation: pulseSoft 2s infinite; }
+
+  /* ── TIMELINE SECTIONS ── */
+  .tl-section { margin-bottom: 60px; opacity: 0; animation: slideUpFade 0.6s ease forwards; }
+  .section-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+    position: sticky; top: 16px; z-index: 20;
+    background: rgba(247, 249, 247, 0.85); backdrop-filter: blur(12px);
+    padding: 12px 24px; border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .section-emoji { font-size: 32px; display: inline-block; animation: floatUI 3s ease-in-out infinite; }
+  .section-title { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; color: var(--ink); }
+  .section-meta { font-size: 13px; color: var(--lilac-dark); margin-left: auto; font-weight: 700; background: var(--lilac-pastel); padding: 6px 16px; border-radius: 20px; }
+
+  /* ── DAY CARDS ── */
+  .day-card {
+    background: var(--white); border: 2px solid transparent;
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.03);
+  }
+  .day-card:hover {
+    box-shadow: 0 15px 35px rgba(163, 144, 228, 0.15);
+    transform: translateY(-5px); border-color: var(--lilac-pastel);
+  }
+  /* Modo edição: neutraliza hover transform para não conflitar com drag */
+  .admin-active .day-card:hover { transform: none; }
+
+  .card-trigger { display: flex; align-items: center; gap: 20px; padding: 24px; cursor: pointer; user-select: none; background: #fff; }
+  .card-day-num {
+    width: 56px; height: 56px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: var(--green-dark);
+    background: var(--green-pastel); flex-shrink: 0; transition: all 0.3s ease;
+  }
+  .day-card:hover .card-day-num { background: var(--lilac-pastel); color: var(--lilac-dark); transform: rotate(-5deg); }
+  .card-meta { flex: 1; }
+  .card-title { font-weight: 700; font-size: 18px; color: var(--ink); margin-bottom: 4px; }
+  .card-city { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; font-weight: 600; }
+  .card-arrow {
+    font-size: 20px; color: var(--lilac-dark);
+    transition: transform 0.4s ease, background 0.4s ease;
+    background: var(--lilac-pastel); width: 40px; height: 40px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  }
+  .day-card.open .card-arrow { transform: rotate(180deg); background: var(--lilac-dark); color: #fff; }
+  .day-card.open { border-color: var(--lilac-pastel); }
+
+  /* ── CARD BODY ── */
+  .card-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+  .day-card.open .card-body { grid-template-rows: 1fr; }
+  .card-body-inner { overflow: hidden; }
+  .card-img-wrap { position: relative; height: 300px; overflow: hidden; margin: 0 24px; border-radius: var(--radius-sm); }
+  .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.8s ease, filter 0.8s ease; }
+  .day-card:hover .card-img-wrap img { transform: scale(1.05); filter: brightness(1.05); }
+  .card-content { padding: 24px; }
+  .activities { margin-bottom: 24px; }
+  .activity {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px 0; border-bottom: 1px dashed var(--border);
+    transition: background 0.3s ease; border-radius: 12px;
+  }
+  .activity:hover { background: #faf9fc; padding-left: 10px; padding-right: 10px; border-bottom-color: transparent; }
+  .activity:last-child { border-bottom: none; }
+  .act-badge {
+    font-size: 12px; font-weight: 800; padding: 6px 12px;
+    border-radius: 10px; flex-shrink: 0; margin-top: 2px;
+    color: var(--ink); text-transform: uppercase; letter-spacing: 0.05em;
+    min-width: 75px; text-align: center;
+  }
+  .badge-manha { background: #ffe4cc; color: #d97726; }
+  .badge-tarde { background: var(--green-pastel); color: var(--green-dark); }
+  .badge-noite { background: var(--lilac-pastel); color: var(--lilac-dark); }
+  .act-text { font-size: 15px; line-height: 1.6; color: var(--ink); }
+  .act-text strong { color: var(--lilac-dark); }
+  .tip-row {
+    display: flex; gap: 16px; align-items: center;
+    background: linear-gradient(to right, rgba(208, 244, 222, 0.4), rgba(229, 217, 242, 0.4));
+    padding: 20px; border-radius: var(--radius-sm);
+    border-left: 4px solid var(--green-dark);
+  }
+  .tip-icon { font-size: 24px; flex-shrink: 0; animation: floatUI 2.5s ease-in-out infinite alternate; }
+  .tip-text { font-size: 14px; line-height: 1.6; color: var(--ink); font-weight: 600; }
+
+  /* ── WEATHER + MAP WIDGET ── */
+  .card-geo-bar {
+    display: flex; gap: 12px; margin: 0 24px 20px;
+    flex-wrap: wrap; align-items: stretch;
+  }
+  .weather-widget {
+    flex: 1; min-width: 180px;
+    background: linear-gradient(135deg, rgba(229,217,242,0.5) 0%, rgba(208,244,222,0.5) 100%);
+    border: 1.5px solid rgba(255,255,255,0.8);
+    border-radius: var(--radius-sm); padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    backdrop-filter: blur(8px);
+  }
+  .weather-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+  .weather-info { flex: 1; }
+  .weather-temp {
+    font-size: 26px; font-weight: 800; color: var(--lilac-dark);
+    font-family: 'Lora', serif; line-height: 1;
+  }
+  .weather-temp sup { font-size: 14px; font-weight: 700; }
+  .weather-desc { font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .weather-range { font-size: 11px; color: var(--green-dark); font-weight: 800; margin-top: 4px; }
+  .weather-loading { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .weather-error  { font-size: 12px; color: #c0392b;   font-weight: 600; }
+
+  .map-widget {
+    flex: 2; min-width: 220px; min-height: 140px;
+    border-radius: var(--radius-sm); overflow: hidden;
+    position: relative; border: 1.5px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 16px rgba(163,144,228,0.10);
+  }
+  .map-widget iframe {
+    width: 100%; height: 100%; min-height: 140px;
+    border: none; display: block;
+    filter: saturate(0.9) hue-rotate(5deg);
+  }
+  .map-open-link {
+    position: absolute; bottom: 10px; right: 10px;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+    color: var(--lilac-dark); font-size: 11px; font-weight: 800;
+    padding: 5px 12px; border-radius: 20px;
+    text-decoration: none; letter-spacing: 0.05em;
+    border: 1px solid rgba(163,144,228,0.25);
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .map-open-link:hover { background: var(--lilac-dark); color: #fff; transform: scale(1.05); }
+
+  @media (max-width: 768px) {
+    .card-geo-bar { margin: 0 16px 16px; flex-direction: column; }
+    .map-widget { min-height: 160px; }
+  }
+
+  /* ── DICAS GRID ── */
+  .dicas-section { margin-top: 80px; position: relative; }
+  .dicas-heading { font-family: 'Lora', serif; font-size: 36px; margin-bottom: 32px; font-weight: 600; text-align: center; color: var(--lilac-dark); }
+  .dicas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .dica-card {
+    background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
+    border: 2px solid var(--white); border-radius: var(--radius);
+    padding: 30px; transition: transform 0.3s ease, box-shadow 0.3s ease; text-align: center;
+  }
+  .dica-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(130, 181, 150, 0.15); background: #fff; }
+  .dica-icon { font-size: 40px; margin-bottom: 16px; display: inline-block; animation: floatUI 3s infinite ease-in-out; }
+  .dica-title { font-size: 18px; font-weight: 800; margin-bottom: 12px; color: var(--green-dark); }
+  .dica-body { font-size: 14px; color: var(--muted); line-height: 1.6; font-weight: 600; }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 80px; text-align: center; font-size: 16px; color: var(--muted);
+    padding: 40px 20px; font-family: 'Lora', serif; font-style: italic;
+    background: linear-gradient(180deg, transparent, rgba(229, 217, 242, 0.3));
+    border-radius: 40px 40px 0 0;
+  }
+  .footer .heart { display: inline-block; animation: pulseSoft 1.5s infinite; filter: hue-rotate(240deg); font-size: 20px; }
+
+  /* ── RESPONSIVO ── */
+  @media (max-width: 768px) {
+    .hero { padding: 80px 24px 60px; border-radius: 0 0 30px 30px; }
+    .hero h1 { font-size: 36px; }
+    .container { padding: 24px 16px 60px; margin-top: -20px; }
+    .section-meta { display: none; }
+    .card-trigger { flex-direction: column; align-items: flex-start; gap: 12px; position: relative; }
+    .card-arrow { position: absolute; right: 24px; top: 24px; }
+    .card-img-wrap { height: 200px; margin: 0 16px; }
+  }
+
+  /* ══════════════════════════════════════════
+     PAINEL ADMINISTRATIVO (Novo — sem afetar visual)
+  ══════════════════════════════════════════ */
+
+  /* Botão flutuante para abrir o painel admin */
+  .admin-toggle-btn {
+    position: fixed; bottom: 32px; right: 32px; z-index: 1000;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--lilac-dark); color: #fff;
+    border: none; cursor: pointer; font-size: 22px;
+    box-shadow: 0 8px 25px rgba(163, 144, 228, 0.5);
+    transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+    animation: pulseSoft 3s infinite;
+  }
+  .admin-toggle-btn:hover { transform: scale(1.1); box-shadow: 0 12px 30px rgba(163, 144, 228, 0.6); }
+  .admin-toggle-btn.active { background: #e05a5a; animation: none; }
+
+  /* Barra de ferramentas admin (aparece no topo quando ativo) */
+  .admin-toolbar {
+    display: none; position: sticky; top: 0; z-index: 500;
+    background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+    border-bottom: 2px solid var(--lilac-pastel);
+    padding: 12px 24px; gap: 10px; flex-wrap: wrap; align-items: center;
+    box-shadow: 0 4px 20px rgba(163,144,228,0.12);
+  }
+  .admin-toolbar.visible { display: flex; }
+  .admin-toolbar-title {
+    font-weight: 800; color: var(--lilac-dark); font-size: 14px;
+    display: flex; align-items: center; gap: 8px; margin-right: 8px;
+  }
+  .admin-toolbar-title span { background: var(--lilac-pastel); padding: 4px 10px; border-radius: 20px; }
+
+  /* Busca na toolbar */
+  .admin-search {
+    padding: 8px 16px; border-radius: 20px;
+    border: 2px solid var(--border); font-size: 14px;
+    font-family: 'Nunito', sans-serif; outline: none;
+    width: 200px; transition: border-color 0.2s;
+    background: var(--bg-color);
+  }
+  .admin-search:focus { border-color: var(--lilac-dark); }
+
+  /* Botões da toolbar */
+  .tb-btn {
+    padding: 8px 16px; border-radius: 20px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s ease; font-family: 'Nunito', sans-serif;
+  }
+  .tb-btn-primary { background: var(--lilac-dark); color: #fff; }
+  .tb-btn-primary:hover { background: #8b78d8; transform: translateY(-1px); }
+  .tb-btn-green { background: var(--green-pastel); color: var(--green-dark); }
+  .tb-btn-green:hover { background: #b0e8c4; transform: translateY(-1px); }
+  .tb-btn-danger { background: #ffe0e0; color: #c0392b; }
+  .tb-btn-danger:hover { background: #ffc9c9; transform: translateY(-1px); }
+  .tb-btn-neutral { background: var(--border); color: var(--ink); }
+  .tb-btn-neutral:hover { background: #ddd; transform: translateY(-1px); }
+  .tb-btn-sep { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+
+  /* ── Controles por card em modo edição ── */
+  .card-admin-controls {
+    display: none; gap: 6px; padding: 8px 16px 8px 24px;
+    background: #faf9fc; border-top: 1px solid var(--border);
+    flex-wrap: wrap; align-items: center;
+  }
+  .admin-active .card-admin-controls { display: flex; }
+  .card-ctrl-btn {
+    padding: 5px 12px; border-radius: 14px; border: none;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    transition: all 0.2s; font-family: 'Nunito', sans-serif;
+  }
+  .ctrl-edit { background: var(--lilac-pastel); color: var(--lilac-dark); }
+  .ctrl-edit:hover { background: var(--lilac-dark); color: #fff; }
+  .ctrl-dup { background: var(--green-pastel); color: var(--green-dark); }
+  .ctrl-dup:hover { background: var(--green-dark); color: #fff; }
+  .ctrl-del { background: #ffe0e0; color: #c0392b; }
+  .ctrl-del:hover { background: #c0392b; color: #fff; }
+  .ctrl-add-act { background: #fff9e6; color: #d97726; }
+  .ctrl-add-act:hover { background: #d97726; color: #fff; }
+
+  /* Drag handle */
+  .drag-handle {
+    display: none; cursor: grab; font-size: 18px; color: var(--muted);
+    padding: 0 8px; align-self: center; line-height: 1;
+    margin-left: auto;
+  }
+  .admin-active .drag-handle { display: block; }
+  .admin-active .day-card.dragging { opacity: 0.4; transform: scale(0.98); border: 2px dashed var(--lilac-dark); }
+  .admin-active .day-card.drag-over { border: 2px dashed var(--green-dark); background: rgba(208,244,222,0.1); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: rgba(74, 74, 89, 0.5); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: var(--radius); width: 100%; max-width: 640px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 30px 80px rgba(74,74,89,0.2);
+    animation: slideUpFade 0.3s ease;
+  }
+  .modal-header {
+    padding: 28px 32px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: #fff; z-index: 1;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .modal-title { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; color: var(--ink); }
+  .modal-close {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: var(--border); cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: #d0d0d8; }
+  .modal-body { padding: 24px 32px; }
+  .modal-footer { padding: 20px 32px 28px; display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* Campos do formulário */
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .form-input, .form-textarea, .form-select {
+    width: 100%; padding: 12px 16px; border: 2px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 15px;
+    font-family: 'Nunito', sans-serif; outline: none; color: var(--ink);
+    background: var(--bg-color); transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--lilac-dark); background: #fff; }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Lista de atividades no modal */
+  .act-list { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .act-list-item {
+    background: var(--bg-color); border-radius: var(--radius-sm);
+    padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start;
+    border: 1px solid var(--border); position: relative;
+  }
+  .act-list-item .form-select { width: 110px; flex-shrink: 0; padding: 8px 10px; font-size: 13px; }
+  .act-list-item .form-textarea { min-height: 60px; font-size: 14px; }
+  .act-remove-btn {
+    background: #ffe0e0; color: #c0392b; border: none;
+    border-radius: 50%; width: 24px; height: 24px; cursor: pointer;
+    font-size: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .act-remove-btn:hover { background: #c0392b; color: #fff; }
+  .add-act-inline-btn {
+    padding: 8px 16px; border-radius: 20px; border: 2px dashed var(--border);
+    background: transparent; color: var(--muted); cursor: pointer; font-size: 13px;
+    font-weight: 700; font-family: 'Nunito', sans-serif; width: 100%;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .add-act-inline-btn:hover { border-color: var(--lilac-dark); color: var(--lilac-dark); background: var(--lilac-pastel); }
+
+  /* Seção de dicas no modal */
+  .dica-list { display: flex; flex-direction: column; gap: 12px; }
+  .dica-list-item {
+    background: var(--bg-color); border-radius: var(--radius-sm);
+    padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start;
+    border: 1px solid var(--border);
+  }
+
+  /* Modal de confirmação */
+  .confirm-modal .modal { max-width: 420px; }
+  .confirm-modal .modal-body { text-align: center; padding: 32px; }
+  .confirm-emoji { font-size: 48px; display: block; margin-bottom: 16px; }
+  .confirm-msg { font-size: 16px; line-height: 1.6; color: var(--ink); margin-bottom: 8px; }
+  .confirm-sub { font-size: 14px; color: var(--muted); }
+
+  /* ── TOAST FEEDBACK ── */
+  .toast-container { position: fixed; bottom: 100px; right: 32px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+  .toast {
+    background: var(--ink); color: #fff; padding: 14px 20px;
+    border-radius: 16px; font-size: 14px; font-weight: 700;
+    box-shadow: 0 8px 24px rgba(74,74,89,0.3); max-width: 280px;
+    animation: toastIn 0.3s ease forwards;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.success { background: var(--green-dark); }
+  .toast.error { background: #c0392b; }
+
+  /* ── BARRA DE DRAG & DROP HINT ── */
+  .drag-hint {
+    display: none; text-align: center; font-size: 12px; color: var(--muted);
+    padding: 6px; background: rgba(229,217,242,0.3);
+    border-radius: 12px; margin-bottom: 12px; font-weight: 600;
+  }
+  .admin-active .drag-hint { display: block; }
+
+  /* ── IMPORT/EXPORT ÁREA ── */
+  .ie-area {
+    display: none; background: rgba(229,217,242,0.2);
+    border: 2px dashed var(--lilac-pastel);
+    border-radius: var(--radius); padding: 20px;
+    text-align: center; margin-top: 12px;
+  }
+  .ie-area label { font-size: 14px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 12px; }
+  .ie-file-input { display: none; }
+
+  /* ── SEÇÃO ADMIN: botão add section ── */
+  .add-section-btn {
+    display: none; width: 100%; padding: 16px;
+    border: 2px dashed var(--lilac-pastel); border-radius: var(--radius);
+    background: transparent; color: var(--lilac-dark); font-size: 15px;
+    font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif;
+    transition: all 0.2s; margin-bottom: 40px; gap: 8px; align-items: center; justify-content: center;
+  }
+  .admin-active ~ * .add-section-btn,
+  .admin-active .add-section-btn { display: flex; }
+  .add-section-btn:hover { background: var(--lilac-pastel); border-style: solid; }
+
+  /* controles de seção */
+  .section-admin-controls {
+    display: none; gap: 8px; margin-top: 8px; margin-left: 16px;
+  }
+  .admin-active .section-admin-controls { display: flex; }
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a390e4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Roteiro Japão">
+</head>
+<body>
+
+<!-- Fundo animado -->
+<div class="floating-bg" id="floatingBg"></div>
+
+<!-- Toolbar do modo admin (sticky no topo) -->
+<div class="admin-toolbar" id="adminToolbar">
+  <div class="admin-toolbar-title">✏️ <span>Modo Edição</span></div>
+  <input type="text" class="admin-search" id="adminSearch" placeholder="🔍 Buscar cidade ou atividade…">
+  <div class="tb-btn-sep"></div>
+  <button class="tb-btn tb-btn-primary" id="btnAddSection">＋ Novo Destino</button>
+  <button class="tb-btn tb-btn-green" id="btnExport">⬇ Exportar JSON</button>
+  <button class="tb-btn tb-btn-neutral" id="btnImportTrigger">⬆ Importar JSON</button>
+  <input type="file" id="btnImport" accept=".json" style="display:none">
+  <button class="tb-btn tb-btn-danger" id="btnResetData">↩ Restaurar Original</button>
+  <div class="tb-btn-sep"></div>
+  <button class="tb-btn tb-btn-neutral" id="btnEditDicas">🌸 Editar Dicas</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditHero">🏷 Editar Hero</button>
+</div>
+
+<header class="hero" id="heroSection"></header>
+
+<main class="container" id="mainContainer">
+  <div class="filters" id="filters"></div>
+  <div id="timeline"></div>
+
+  <section class="dicas-section">
+    <h2 class="dicas-heading">🌸 Dicas de Ouro 🌸</h2>
+    <div class="dicas-grid" id="dicasGrid"></div>
+  </section>
+
+  <footer class="footer" id="footerEl">
+    Roteiro desenhado com <span class="heart">💜</span> para celebrar o amor. Uma viagem inesquecível espera por vocês!
+  </footer>
+</main>
+
+<!-- Botão flutuante para ativar/desativar modo edição -->
+<button class="admin-toggle-btn" id="adminToggleBtn" title="Modo Edição">✏️</button>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Modal principal (editar dia / adicionar dia / editar seção / hero / dicas) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="mainModal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Editar Dia</span>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Modal de confirmação -->
+<div class="modal-overlay confirm-modal" id="confirmOverlay">
+  <div class="modal">
+    <div class="modal-body">
+      <span class="confirm-emoji" id="confirmEmoji">⚠️</span>
+      <p class="confirm-msg" id="confirmMsg">Tem certeza?</p>
+      <p class="confirm-sub" id="confirmSub"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn tb-btn-neutral" id="confirmCancel">Cancelar</button>
+      <button class="tb-btn tb-btn-danger" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 1: AppData — Dados padrão do roteiro
+   Toda edição acontece sobre uma cópia em memória de SECTIONS e DICAS.
+   Os dados originais ficam preservados em DEFAULT_DATA para reset.
+══════════════════════════════════════════════════════════════ */
+const DEFAULT_DATA = {
+  hero: {
+    eyebrow: "Roteiro de lua de mel ✨",
+    title: "Angelo & Dani",
+    subtitle: "O encanto do Japão em tons suaves • 13 Out a 05 Nov",
+    stats: [
+      { num: "23", lbl: "Dias Mágicos" },
+      { num: "7",  lbl: "Cidades" },
+      { num: "∞",  lbl: "Memórias" }
+    ]
+  },
+  sections: [
+    { id:"tokyo", label:"Tóquio", emoji:"🗼", dates:"13–19/10",
+      subtitle:"Modernidade, cultura pop & compras",
+      days:[
+        { date:"13/10 Dom", num:"D1", title:"Chegada em Tóquio & Câmera", city:"Shinjuku",
+          img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Desembarque em Narita ou Haneda, imigração e retirada de passes/internet."},
+            {t:"Tarde", class:"badge-tarde", tx:"Check-in. <strong>Busca da Nikon Zf / Fuji X100VI:</strong> Vá direto à <em>Map Camera</em> em Shinjuku."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar leve. Uma tigela de ramen quente no Ichiran ou Afuri para aquecer a noite."}
+          ], tip:"Adapte-se ao fuso: resista bravamente à vontade de dormir antes das 22h locais!" },
+        { date:"14/10 Seg", num:"D2", title:"Akihabara & Skytree", city:"Akihabara / Sumida",
+          img:"https://images.unsplash.com/photo-1604849329715-24b2e3f5bac7?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Akihabara – Radio Kaikan e lojas de anime para as figures do Angelo."},
+            {t:"Tarde", class:"badge-tarde", tx:"Pit-stop na gigante <em>Yodobashi Akiba</em>. Passeio pelos Arcades e UFO Catchers."},
+            {t:"Noite", class:"badge-noite", tx:"Subida na Tokyo Skytree. Jantem na Solamachi, o shopping aos pés da torre."}
+          ], tip:"Reserve o ingresso do Skytree online. O pôr do sol lá de cima rende as melhores fotos." },
+        { date:"15/10 Ter", num:"D3", title:"Senso-ji & Odaiba", city:"Asakusa / Odaiba",
+          img:"https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Templo Senso-ji em Asakusa e caminhada pela rua de comércio Nakamise."},
+            {t:"Tarde", class:"badge-tarde", tx:"Passeio de barco futurista (Himiko) pelo Rio Sumida até a ilha de Odaiba."},
+            {t:"Noite", class:"badge-noite", tx:"Foto com o Gundam gigante e jantar com vista para a Rainbow Bridge iluminada."}
+          ], tip:"Chegue ao Senso-ji antes das 8h para fotos limpas, sem multidão. Voltem pro café depois." },
+        { date:"16/10 Qua", num:"D4", title:"Harajuku & Shibuya", city:"Harajuku / Shibuya",
+          img:"https://images.unsplash.com/photo-1569974498991-d3c12a504f95?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Santuário Meiji, seguido pela loucura pop e crepes da rua Takeshita em Harajuku."},
+            {t:"Tarde", class:"badge-tarde", tx:"Shibuya! Foto com Hachiko e travessia. Almoço no <em>Gyukatsu Motomura</em>."},
+            {t:"Noite", class:"badge-noite", tx:"Shibuya Sky (imperdível). Depois, drinks ou espetinhos no Nonbei Yokocho."}
+          ], tip:"Dica para foto do cruzamento: subam no Mag's Park para a melhor visão panorâmica." },
+        { date:"17/10 Qui", num:"D5", title:"teamLab & Ginza", city:"Toyosu / Ginza",
+          img:"https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"teamLab Planets – a exposição de arte digital mais sensorial do mundo."},
+            {t:"Tarde", class:"badge-tarde", tx:"Passeio pelas largas avenidas de Ginza. Vejam vitrines, Nissan e a Uniqlo gigante."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar elegante em Roppongi e possível visita ao Mori Art Museum."}
+          ], tip:"Vá com roupas que possam ser dobradas até o joelho para o teamLab (tem água!)." },
+        { date:"18/10 Sex", num:"D6", title:"O Dia Mágico Disney", city:"Urayasu",
+          img:"https://images.unsplash.com/photo-1585620385456-4759f9b5c7d9?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"DisneySea! Foco nas atrações mais concorridas logo na abertura do parque."},
+            {t:"Tarde", class:"badge-tarde", tx:"Aproveitem os cenários imersivos e os lanches temáticos fofos (alien mochi)."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar no parque e fechamento com o show noturno 'Believe! Sea of Dreams'."}
+          ], tip:"A DisneySea é focada em adultos. A ambientação europeia é perfeita para a lua de mel." },
+        { date:"19/10 Sáb", num:"D7", title:"Jardins & Wagyu", city:"Shinjuku",
+          img:"https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Caminhada romântica pelo Jardim Nacional Shinjuku Gyoen (folhas de outono)."},
+            {t:"Tarde", class:"badge-tarde", tx:"Último giro de compras e souvenirs, fechamento das decisões de câmera."},
+            {t:"Noite", class:"badge-noite", tx:"<strong>Date Night:</strong> Wagyu no restaurante <em>Rokkasen</em> e passeio digestivo por Kabukicho."}
+          ], tip:"Kabukicho à noite é vibrante e seguro, apenas ignorem os convites verbais na rua." }
+      ]
+    },
+    { id:"hakone", label:"Hakone", emoji:"🗻", dates:"20–21/10",
+      subtitle:"Monte Fuji, onsen & relaxamento",
+      days:[
+        { date:"20/10 Dom", num:"D8", title:"Rumos à Tradição", city:"Hakone",
+          img:"https://images.unsplash.com/photo-1570459027562-4a916cc6113f?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Despachem as malas pro próximo destino. Trem 'Romancecar' rumo a Hakone."},
+            {t:"Tarde", class:"badge-tarde", tx:"Check-in no Ryokan. Vistam os Yukatas e tomem chá verde no quarto."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar Kaiseki (múltiplos pratos artísticos) e relaxamento no Onsen."}
+          ], tip:"Um quarto com 'rotenburo' (banheira na varanda) vale muito a pena para casais." },
+        { date:"21/10 Seg", num:"D9", title:"Vale Vulcânico", city:"Hakone",
+          img:"https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Teleférico até Owakudani. Comam o Kuro Tamago (ovo negro da longevidade!)."},
+            {t:"Tarde", class:"badge-tarde", tx:"Cruzeiro romântico no 'Barco Pirata' pelo Lago Ashi."},
+            {t:"Noite", class:"badge-noite", tx:"Mais uma sessão de onsen no ryokan para aliviar a musculatura."}
+          ], tip:"As manhãs bem claras são a sua melhor chance de ver o Monte Fuji sem nuvens." }
+      ]
+    },
+    { id:"alpino", label:"Alpes", emoji:"🏔️", dates:"22–23/10",
+      subtitle:"Takayama & Shirakawa-go",
+      days:[
+        { date:"22/10 Ter", num:"D10", title:"Mercados e Madeira", city:"Takayama",
+          img:"https://images.unsplash.com/photo-1590559899731-a382839e5549?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Passeio no pitoresco mercado matinal de Miyagawa ao longo do rio."},
+            {t:"Tarde", class:"badge-tarde", tx:"Exploração por Sanmachi Suji (ruas da era Edo) e degustação de saquê."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar farto com a famosa carne de Hida (Hoba Miso)."}
+          ], tip:"O clima nas montanhas em outubro esfria bastante. Use casacos quentinhos." },
+        { date:"23/10 Qua", num:"D11", title:"Vila Encantada", city:"Shirakawa-go",
+          img:"https://images.unsplash.com/photo-1601459427108-47e20-b21f-b73e-8046a2e7e34c?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Ônibus para Shirakawa-go. Caminhem pelas casas de telhado de palha."},
+            {t:"Tarde", class:"badge-tarde", tx:"Viagem de trem até Quioto. Hora perfeita para jogar no Steam Deck!"},
+            {t:"Noite", class:"badge-noite", tx:"Chegada a Quioto, check-in e jantar na imponente Kyoto Station."}
+          ], tip:"Na viagem de trem até Quioto, sentem no lado direito para ver o mar." }
+      ]
+    },
+    { id:"kyoto", label:"Quioto", emoji:"⛩️", dates:"24–28/10",
+      subtitle:"Tradição, gueixas & outono",
+      days:[
+        { date:"24/10 Qui", num:"D12", title:"Mil Torii", city:"Fushimi",
+          img:"https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Cheguem ao Fushimi Inari Taisha às 6h30 para uma subida fotográfica e vazia."},
+            {t:"Tarde", class:"badge-tarde", tx:"Pavilhão de Prata e caminhada adorável pelo Caminho do Filósofo."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar contemplativo no bairro histórico de Higashiyama."}
+          ], tip:"O Fushimi Inari fica aberto 24h. Subam e desçam antes das 9h para fugir da excursão." },
+        { date:"25/10 Sex", num:"D13", title:"Kinkaku-ji e Gion", city:"Kinkaku / Gion",
+          img:"https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Visita ao brilhante Pavilhão de Ouro (Kinkaku-ji)."},
+            {t:"Tarde", class:"badge-tarde", tx:"Templo Kiyomizu-dera e ladeiras charmosas de Sannenzaka/Ninenzaka."},
+            {t:"Noite", class:"badge-noite", tx:"Caminhada em Gion, o distrito das gueixas, buscando um izakaya intimista."}
+          ], tip:"Alugar kimonos para passear de tarde rende fotos de casal lindíssimas!" },
+        { date:"26/10 Sáb", num:"D14", title:"Bambus & Sabores", city:"Arashiyama",
+          img:"https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Floresta de Bambu de Arashiyama bem cedo, seguida pelo templo Tenryu-ji."},
+            {t:"Tarde", class:"badge-tarde", tx:"Almoço provando delícias de rua no Mercado Nishiki."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar nos restaurantes suspensos sobre o Rio Kamo (Kamo-gawa)."}
+          ], tip:"No Mercado Nishiki, não coma andando. Coma em frente à barraquinha do vendedor." },
+        { date:"27/10 Dom", num:"D15", title:"Cervos e Budas", city:"Nara",
+          img:"https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Trem para Nara. Alimentem os cervos sagrados que passeiam pelo parque."},
+            {t:"Tarde", class:"badge-tarde", tx:"Visitem o Templo Todai-ji e o imenso Buda Gigante de bronze."},
+            {t:"Noite", class:"badge-noite", tx:"Volta para Quioto, com compras e passeio livre por Teramachi."}
+          ], tip:"Os cervos são fofos, mas esfomeados. Escondam mapas e papéis soltos!" },
+        { date:"28/10 Seg", num:"D16", title:"Ritual A Dois", city:"Quioto",
+          img:"https://images.unsplash.com/photo-1553856622-d1b352e9a211?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Cerimônia do Chá privativa. Uma imersão romântica na cultura Zen."},
+            {t:"Tarde", class:"badge-tarde", tx:"Visita ao Castelo Nijo-jo com seu piso 'rouxinol'."},
+            {t:"Noite", class:"badge-noite", tx:"Caminhada romântica pela ruela iluminada de Pontocho."}
+          ], tip:"Para algo divertido, tentem reservar o famoso 'Kichi Kichi Omurice' com antecedência." }
+      ]
+    },
+    { id:"osaka", label:"Osaka", emoji:"🎡", dates:"29–31/10",
+      subtitle:"Gastronomia vibrante e USJ",
+      days:[
+        { date:"29/10 Ter", num:"D17", title:"A Cozinha do Japão", city:"Osaka",
+          img:"https://images.unsplash.com/photo-1589450602895-06b87be4a5cd?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Chegada a Osaka, check-in e fotos belíssimas no Castelo de Osaka."},
+            {t:"Tarde", class:"badge-tarde", tx:"Exploração em Dotonbori. Provem Takoyaki quentinho e vejam os neons."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar <em>Matsusakagyu Yakiniku M</em> e foto com o letreiro do Glico Man."}
+          ], tip:"Osaka é descontraída. O lema é 'Kuidaore' (comer até cair). Aproveitem!" },
+        { date:"30/10 Qua", num:"D18", title:"Universal Studios", city:"Osaka – USJ",
+          img:"https://images.unsplash.com/photo-1502877338535-766e1452684a?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Super Nintendo World na abertura do parque. O cenário é irreal!"},
+            {t:"Tarde", class:"badge-tarde", tx:"Magia com Butterbeer no Harry Potter e montanha russa Flying Dinosaur."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar na animada CityWalk Osaka (hambúrguer ou okonomiyaki)."}
+          ], tip:"Comprem o Express Pass meses antes online para não perderem tempo em filas." },
+        { date:"31/10 Qui", num:"D19", title:"Castelo da Garça", city:"Himeji",
+          img:"https://images.unsplash.com/photo-1590559899731-a382839e5549?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Bate e volta a Himeji. Visitem o mais lindo e original castelo do Japão."},
+            {t:"Tarde", class:"badge-tarde", tx:"Compras jovens por Shinsaibashi e Amerikamura."},
+            {t:"Noite", class:"badge-noite", tx:"Bairro retrô de Shinsekai. Jantem Kushikatsu (espetinhos fritos locais)."}
+          ], tip:"O castelo de Himeji é de madeira original e sobreviveu intacto por séculos." }
+      ]
+    },
+    { id:"hiro", label:"Hiroshima", emoji:"🕊️", dates:"01–02/11",
+      subtitle:"Paz, história e ilha flutuante",
+      days:[
+        { date:"01/11 Sex", num:"D20", title:"Memorial & Okonomiyaki", city:"Hiroshima",
+          img:"https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Parque Memorial da Paz, Sino da Paz e Cúpula Genbaku."},
+            {t:"Tarde", class:"badge-tarde", tx:"Museu do Memorial da Paz (experiência densa, mas transformadora)."},
+            {t:"Noite", class:"badge-noite", tx:"Jantar no Okonomiyaki Mura, provando a versão local com macarrão."}
+          ], tip:"Após o museu, tomem um sorvete e conversem perto do rio para espairecer." },
+        { date:"02/11 Sáb", num:"D21", title:"Ilha Sagrada", city:"Miyajima",
+          img:"https://images.unsplash.com/photo-1503656142023-618e7d1f435a?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Balsa para Miyajima. Foto romântica com o Torii Flutuante gigante."},
+            {t:"Tarde", class:"badge-tarde", tx:"Teleférico do Monte Misen com vista espetacular para o mar interior."},
+            {t:"Noite", class:"badge-noite", tx:"Longa viagem de Shinkansen de volta a Tóquio jantando Bentos no trem."}
+          ], tip:"Se a maré estiver baixa à tarde, é possível caminhar até a base do grande Torii." }
+      ]
+    },
+    { id:"volta", label:"Despedida", emoji:"✈️", dates:"03–05/11",
+      subtitle:"Arremates finais e até logo",
+      days:[
+        { date:"03/11 Dom", num:"D22", title:"Otakus & Gatinhos", city:"Tóquio",
+          img:"https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Nakano Broadway (itens raros e vintage para o Angelo)."},
+            {t:"Tarde", class:"badge-tarde", tx:"Mega Pokémon Center. <strong>Para Luna e Apolo:</strong> Estoque de Churu na Daiso."},
+            {t:"Noite", class:"badge-noite", tx:"Passeio no Shinjuku Golden Gai. Drink em um barzinho minúsculo."}
+          ], tip:"Se a mala encher, a Mega Don Quijote vende malas baratas e ótimas." },
+        { date:"04/11 Seg", num:"D23", title:"O Jantar dos Deuses", city:"Tóquio",
+          img:"https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Checklist final: Skincare (Matsumoto Kiyoshi) e Papelaria (Ito-ya)."},
+            {t:"Tarde", class:"badge-tarde", tx:"Arrumação das malas e descanso merecido no hotel."},
+            {t:"Noite", class:"badge-noite", tx:"<strong>Omakase:</strong> Deixem o chef surpreender vocês em um balcão de sushi premium."}
+          ], tip:"Aproveitem essa última noite só para caminhar de mãos dadas e observar as luzes." },
+        { date:"05/11 Ter", num:"FIM", title:"Sayonara, Japão", city:"Narita / Haneda",
+          img:"https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=80",
+          acts:[
+            {t:"Manhã", class:"badge-manha", tx:"Check-out calmo e trem expresso até o aeroporto."},
+            {t:"Tarde", class:"badge-tarde", tx:"Duty Free: Tokyo Bananas e Royce Chocolate de lembrancinha."},
+            {t:"Noite", class:"badge-noite", tx:"Embarque de volta. Hora de rever as fotos da câmera nova no avião!"}
+          ], tip:"O Tax-Free no aeroporto japonês é rápido e todo digital/automatizado." }
+      ]
+    }
+  ],
+  dicas: [
+    { icon:"🍂", title:"Clima Perfeito", body:"O outono traz um friozinho charmoso. Os tons da natureza criam fundos perfeitos para as fotos a dois." },
+    { icon:"📷", title:"Memórias", body:"Fujiya Camera em Nakano é um ótimo plano B caso não achem a Nikon ou a Fuji nas grandes lojas do centro." },
+    { icon:"🎮", title:"Trem & Games", body:"As viagens de Shinkansen são longas e incrivelmente confortáveis. Momento ideal para avançar no Steam Deck." },
+    { icon:"🐾", title:"Mimos Felinos", body:"Os japoneses amam pets! As seções da Daiso e DonKi tem os sachês mais inusitados para a Luna e o Apolo." },
+    { icon:"📱", title:"Suica Digital", body:"Colocar o cartão Suica na Apple Wallet/Google Pay facilita metrô, ônibus e até máquinas de suco nas ruas." },
+    { icon:"🧳", title:"Viajem Leves", body:"O serviço Takuhaibin (envio de malas entre hotéis) é barato e essencial. Não entrem no trem bala com tralha!" }
+  ]
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 2: State — Cópia mutável dos dados em memória
+   Qualquer edição altera `AppState`, não os dados originais.
+══════════════════════════════════════════════════════════════ */
+let AppState = null; // Iniciado em init()
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 3: Storage — Persistência com LocalStorage
+══════════════════════════════════════════════════════════════ */
+const Storage = {
+  KEY: 'roteiro_japao_v1',
+
+  /** Salva AppState no LocalStorage */
+  save() {
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify(AppState));
+      UI.showToast('Salvo com sucesso! ✓', 'success');
+    } catch(e) {
+      UI.showToast('Erro ao salvar.', 'error');
+    }
+  },
+
+  /** Carrega do LocalStorage; retorna null se não existir */
+  load() {
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) {
+      return null;
+    }
+  },
+
+  /** Remove dados do LocalStorage e restaura padrão */
+  reset() {
+    localStorage.removeItem(this.KEY);
+    AppState = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    Renderer.renderAll();
+    UI.showToast('Dados originais restaurados.', 'success');
+  },
+
+  /** Exporta AppState como download de arquivo JSON */
+  exportJSON() {
+    const blob = new Blob([JSON.stringify(AppState, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = 'roteiro-japao.json'; a.click();
+    URL.revokeObjectURL(url);
+    UI.showToast('JSON exportado! ⬇', 'success');
+  },
+
+  /** Importa JSON de arquivo e re-renderiza */
+  importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if(!data.sections || !data.dicas) throw new Error('Formato inválido');
+        AppState = data;
+        this.save();
+        Renderer.renderAll();
+        UI.showToast('Roteiro importado! ✓', 'success');
+      } catch(err) {
+        UI.showToast('Arquivo inválido. Use um JSON exportado por esta página.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 4: Renderer — Funções puras de renderização
+   Cada função recebe dados e gera HTML/DOM sem lógica de negócios.
+══════════════════════════════════════════════════════════════ */
+const Renderer = {
+
+  /** Renderiza tudo de uma vez (hero + filtros + timeline + dicas) */
+  renderAll() {
+    this.renderHero();
+    this.renderFilters();
+    this.renderTimeline();
+    this.renderDicas();
+  },
+
+  /** Renderiza o cabeçalho hero com os dados do AppState.hero */
+  renderHero() {
+    const h = AppState.hero;
+    const statsHtml = h.stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-num">${s.num}</div>
+        <div class="stat-lbl">${s.lbl}</div>
+      </div>`).join('');
+
+    document.getElementById('heroSection').innerHTML = `
+      <div class="hero-eyebrow">${h.eyebrow}</div>
+      <h1>${h.title}</h1>
+      <p class="hero-sub">${h.subtitle}</p>
+      <div class="hero-stats">${statsHtml}</div>`;
+  },
+
+  /** Renderiza os botões de filtro por destino */
+  renderFilters() {
+    const el = document.getElementById('filters');
+    const buttons = [`<button class="filter-btn active" data-f="all">✨ Toda a Magia</button>`];
+    AppState.sections.forEach(s => {
+      buttons.push(`<button class="filter-btn" data-f="${s.id}">${s.emoji} ${s.label}</button>`);
+    });
+    el.innerHTML = buttons.join('');
+
+    // Reattach filter events
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if(!btn) return;
+      el.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.f;
+      document.querySelectorAll('.tl-section').forEach(sec => {
+        sec.style.display = (f === 'all' || sec.dataset.id === f) ? '' : 'none';
+      });
+    });
+  },
+
+  /** Renderiza toda a timeline de seções e dias */
+  renderTimeline() {
+    const tlEl = document.getElementById('timeline');
+    tlEl.innerHTML = '';
+
+    AppState.sections.forEach((sec, secIdx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'tl-section';
+      wrap.dataset.id = sec.id;
+      wrap.dataset.secIdx = secIdx;
+      wrap.style.animationDelay = `${secIdx * 0.12}s`;
+
+      // Header da seção
+      wrap.innerHTML = `
+        <div class="section-header">
+          <span class="section-emoji">${sec.emoji}</span>
+          <h2 class="section-title">${sec.label}</h2>
+          <span class="section-meta">${sec.dates} • ${sec.subtitle}</span>
+          <div class="section-admin-controls">
+            <button class="card-ctrl-btn ctrl-edit" onclick="AdminPanel.openSectionModal(${secIdx})">✏️ Editar Destino</button>
+            <button class="card-ctrl-btn ctrl-del" onclick="AdminPanel.confirmDeleteSection(${secIdx})">🗑 Remover</button>
+            <button class="card-ctrl-btn ctrl-dup" onclick="AdminPanel.duplicateSection(${secIdx})">⧉ Duplicar</button>
+          </div>
+        </div>
+        <div class="drag-hint">☰ Arraste os cards para reordenar os dias</div>`;
+
+      // Cards dos dias
+      sec.days.forEach((day, dayIdx) => {
+        wrap.appendChild(this.renderDayCard(day, secIdx, dayIdx));
+      });
+
+      // Botão "Adicionar Dia" (visível somente em modo admin)
+      const addDayBtn = document.createElement('button');
+      addDayBtn.className = 'add-section-btn';
+      addDayBtn.innerHTML = '＋ Adicionar Dia neste Destino';
+      addDayBtn.addEventListener('click', () => AdminPanel.openAddDayModal(secIdx));
+      wrap.appendChild(addDayBtn);
+
+      tlEl.appendChild(wrap);
+
+      // Ativa drag & drop para esta seção
+      AdminPanel.initDragAndDrop(wrap, secIdx);
+    });
+
+    // Botão global "Adicionar Destino" no fim da timeline
+    const addSecBtn = document.createElement('button');
+    addSecBtn.className = 'add-section-btn';
+    addSecBtn.innerHTML = '＋ Adicionar Novo Destino';
+    addSecBtn.addEventListener('click', () => AdminPanel.openSectionModal(null));
+    tlEl.appendChild(addSecBtn);
+  },
+
+  /**
+   * Renderiza um card de dia
+   * @param {Object} day - dados do dia
+   * @param {number} secIdx - índice da seção
+   * @param {number} dayIdx - índice do dia dentro da seção
+   * @returns {HTMLElement}
+   */
+  renderDayCard(day, secIdx, dayIdx) {
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.dataset.secIdx = secIdx;
+    card.dataset.dayIdx = dayIdx;
+    card.draggable = false; // ativado pelo admin
+
+    const actsHtml = this.renderActivities(day.acts);
+
+    // Resolve coordenadas e query de mapa para a cidade do dia
+    const geo = GeoWeather.resolveCity(day.city);
+    const mapQuery = encodeURIComponent(geo.mapQuery);
+    const mapsUrl  = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+    const embedUrl = `https://maps.google.com/maps?q=${mapQuery}&output=embed&z=13&hl=pt-BR`;
+
+    card.innerHTML = `
+      <div class="card-trigger">
+        <div class="card-day-num">${day.num}</div>
+        <div class="card-meta">
+          <div class="card-title">${day.date} — ${day.title}</div>
+          <div class="card-city">📍 ${day.city}</div>
+        </div>
+        <span class="drag-handle" title="Arrastar para reordenar">⠿</span>
+        <div class="card-arrow">▾</div>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          <div class="card-img-wrap">
+            <img src="${day.img}" alt="${day.title}" loading="lazy" onerror="this.parentElement.style.background='linear-gradient(135deg,var(--lilac-pastel),var(--green-pastel))'; this.style.display='none'">
+          </div>
+          <div class="card-geo-bar">
+            <div class="weather-widget" data-lat="${geo.lat}" data-lon="${geo.lon}" data-city="${geo.name}">
+              <div class="weather-icon">🌡️</div>
+              <div class="weather-info">
+                <div class="weather-loading">Carregando clima…</div>
+              </div>
+            </div>
+            <div class="map-widget">
+              <iframe
+                src="${embedUrl}"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Mapa de ${day.city}">
+              </iframe>
+              <a class="map-open-link" href="${mapsUrl}" target="_blank" rel="noopener">🗺 Abrir no Maps</a>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="activities">${actsHtml}</div>
+            <div class="tip-row">
+              <span class="tip-icon">💡</span>
+              <span class="tip-text">${day.tip}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-admin-controls">
+        <button class="card-ctrl-btn ctrl-edit" data-action="edit">✏️ Editar Dia</button>
+        <button class="card-ctrl-btn ctrl-dup" data-action="dup">⧉ Duplicar</button>
+        <button class="card-ctrl-btn ctrl-del" data-action="del">🗑 Remover Dia</button>
+      </div>`;
+
+    // Expand/collapse ao clicar no trigger
+    card.querySelector('.card-trigger').addEventListener('click', e => {
+      // No modo admin, só abre se não clicar no handle
+      if(e.target.closest('.drag-handle')) return;
+      const isOpen = card.classList.contains('open');
+      document.querySelectorAll('.day-card').forEach(c => c.classList.remove('open'));
+      if(!isOpen) {
+        card.classList.add('open');
+        // Carrega clima ao abrir o card pela primeira vez
+        const ww = card.querySelector('.weather-widget');
+        if(ww && !ww.dataset.loaded) {
+          ww.dataset.loaded = '1';
+          GeoWeather.fetchAndRender(ww);
+        }
+      }
+    });
+
+    // Botões de controle admin
+    card.querySelector('[data-action="edit"]').addEventListener('click', () => AdminPanel.openEditDayModal(secIdx, dayIdx));
+    card.querySelector('[data-action="dup"]').addEventListener('click',  () => AdminPanel.duplicateDay(secIdx, dayIdx));
+    card.querySelector('[data-action="del"]').addEventListener('click',  () => AdminPanel.confirmDeleteDay(secIdx, dayIdx));
+
+    return card;
+  },
+
+  /**
+   * Renderiza as atividades (manhã/tarde/noite) de um dia
+   * @param {Array} acts - array de atividades
+   * @returns {string} HTML
+   */
+  renderActivities(acts) {
+    return acts.map(a => `
+      <div class="activity">
+        <span class="act-badge ${a.class}">${a.t}</span>
+        <span class="act-text">${a.tx}</span>
+      </div>`).join('');
+  },
+
+  /** Renderiza a grade de dicas */
+  renderDicas() {
+    const el = document.getElementById('dicasGrid');
+    el.innerHTML = AppState.dicas.map(d => `
+      <div class="dica-card">
+        <div class="dica-icon">${d.icon}</div>
+        <div class="dica-title">${d.title}</div>
+        <div class="dica-body">${d.body}</div>
+      </div>`).join('');
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 5: AdminPanel — Lógica do modo edição
+   Gerencia modais, drag & drop, CRUD de seções/dias/atividades.
+══════════════════════════════════════════════════════════════ */
+const AdminPanel = {
+  isActive: false,
+  _confirmCallback: null,
+  _dragSrcIdx: null,
+
+  /** Ativa ou desativa o modo de edição */
+  toggle() {
+    this.isActive = !this.isActive;
+    document.body.classList.toggle('admin-active', this.isActive);
+    const toolbar = document.getElementById('adminToolbar');
+    const btn = document.getElementById('adminToggleBtn');
+    toolbar.classList.toggle('visible', this.isActive);
+    btn.textContent = this.isActive ? '✕' : '✏️';
+    btn.classList.toggle('active', this.isActive);
+    btn.title = this.isActive ? 'Sair do modo edição' : 'Modo Edição';
+
+    // Habilita/desabilita draggable nos cards
+    document.querySelectorAll('.day-card').forEach(c => {
+      c.draggable = this.isActive;
+    });
+
+    if(this.isActive) UI.showToast('Modo edição ativado ✏️');
+    else UI.showToast('Modo edição desativado');
+  },
+
+  /* ── Drag & Drop ── */
+
+  /** Inicializa drag & drop em uma seção wrapper */
+  initDragAndDrop(wrapper, secIdx) {
+    wrapper.addEventListener('dragstart', e => {
+      const card = e.target.closest('.day-card');
+      if(!card || !this.isActive) return;
+      this._dragSrcIdx = parseInt(card.dataset.dayIdx);
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    wrapper.addEventListener('dragend', e => {
+      const card = e.target.closest('.day-card');
+      if(card) card.classList.remove('dragging');
+      wrapper.querySelectorAll('.day-card').forEach(c => c.classList.remove('drag-over'));
+    });
+
+    wrapper.addEventListener('dragover', e => {
+      e.preventDefault();
+      const card = e.target.closest('.day-card');
+      if(!card || !this.isActive) return;
+      wrapper.querySelectorAll('.day-card').forEach(c => c.classList.remove('drag-over'));
+      card.classList.add('drag-over');
+    });
+
+    wrapper.addEventListener('drop', e => {
+      e.preventDefault();
+      const card = e.target.closest('.day-card');
+      if(!card || !this.isActive) return;
+      const destIdx = parseInt(card.dataset.dayIdx);
+      if(this._dragSrcIdx === null || this._dragSrcIdx === destIdx) return;
+
+      // Reordena os dias na seção
+      const days = AppState.sections[secIdx].days;
+      const [moved] = days.splice(this._dragSrcIdx, 1);
+      days.splice(destIdx, 0, moved);
+      this._dragSrcIdx = null;
+
+      Storage.save();
+      Renderer.renderTimeline();
+    });
+  },
+
+  /* ── CRUD de Seções ── */
+
+  /** Abre modal para adicionar ou editar uma seção/destino */
+  openSectionModal(secIdx) {
+    const isNew = secIdx === null;
+    const sec = isNew ? { id:'', label:'', emoji:'', dates:'', subtitle:'' }
+                      : { ...AppState.sections[secIdx] };
+
+    UI.openModal(isNew ? 'Novo Destino' : 'Editar Destino', `
+      <div class="form-group">
+        <label class="form-label">Emoji do destino</label>
+        <input class="form-input" id="f_emoji" value="${sec.emoji}" placeholder="Ex: 🗼">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome (Label)</label>
+          <input class="form-input" id="f_label" value="${sec.label}" placeholder="Ex: Tóquio">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ID único</label>
+          <input class="form-input" id="f_id" value="${sec.id}" placeholder="Ex: tokyo">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Datas</label>
+          <input class="form-input" id="f_dates" value="${sec.dates}" placeholder="Ex: 13–19/10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subtítulo</label>
+          <input class="form-input" id="f_subtitle" value="${sec.subtitle}" placeholder="Ex: Cultura pop & compras">
+        </div>
+      </div>`,
+      [
+        { label: isNew ? '＋ Adicionar Destino' : '💾 Salvar', cls: 'tb-btn-primary', action: () => {
+          const data = {
+            id: document.getElementById('f_id').value.trim() || 'sec_' + Date.now(),
+            label: document.getElementById('f_label').value.trim(),
+            emoji: document.getElementById('f_emoji').value.trim(),
+            dates: document.getElementById('f_dates').value.trim(),
+            subtitle: document.getElementById('f_subtitle').value.trim(),
+            days: isNew ? [] : AppState.sections[secIdx].days
+          };
+          if(!data.label) { UI.showToast('Preencha o nome do destino.', 'error'); return; }
+
+          if(isNew) AppState.sections.push(data);
+          else AppState.sections[secIdx] = data;
+
+          Storage.save();
+          Renderer.renderAll();
+          UI.closeModal();
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
+  },
+
+  /** Confirma e remove uma seção inteira */
+  confirmDeleteSection(secIdx) {
+    const name = AppState.sections[secIdx].label;
+    UI.showConfirm(
+      '🗑', `Remover o destino "${name}"?`,
+      `Todos os ${AppState.sections[secIdx].days.length} dias serão apagados.`,
+      () => {
+        AppState.sections.splice(secIdx, 1);
+        Storage.save();
+        Renderer.renderAll();
+        UI.showToast(`Destino "${name}" removido.`);
+      }
+    );
+  },
+
+  /** Duplica uma seção com novo ID */
+  duplicateSection(secIdx) {
+    const clone = JSON.parse(JSON.stringify(AppState.sections[secIdx]));
+    clone.id = clone.id + '_copia_' + Date.now().toString().slice(-4);
+    clone.label += ' (cópia)';
+    AppState.sections.splice(secIdx + 1, 0, clone);
+    Storage.save();
+    Renderer.renderAll();
+    UI.showToast('Destino duplicado! ⧉', 'success');
+  },
+
+  /* ── CRUD de Dias ── */
+
+  /** Abre modal para adicionar um novo dia a uma seção */
+  openAddDayModal(secIdx) {
+    this._openDayFormModal(secIdx, null);
+  },
+
+  /** Abre modal para editar um dia existente */
+  openEditDayModal(secIdx, dayIdx) {
+    this._openDayFormModal(secIdx, dayIdx);
+  },
+
+  /**
+   * Modal de formulário para criar/editar um dia
+   * Usado por openAddDayModal e openEditDayModal
+   */
+  _openDayFormModal(secIdx, dayIdx) {
+    const isNew = dayIdx === null;
+    const day = isNew
+      ? { date:'', num:'', title:'', city:'', img:'', acts:[
+          {t:'Manhã', class:'badge-manha', tx:''},
+          {t:'Tarde', class:'badge-tarde', tx:''},
+          {t:'Noite', class:'badge-noite', tx:''}
+        ], tip:'' }
+      : JSON.parse(JSON.stringify(AppState.sections[secIdx].days[dayIdx]));
+
+    // Usamos um array reativo de atividades para o formulário
+    let formActs = [...day.acts];
+
+    const renderActList = () => {
+      const container = document.getElementById('actListContainer');
+      if(!container) return;
+      container.innerHTML = formActs.map((a, i) => `
+        <div class="act-list-item" data-ai="${i}">
+          <select class="form-select act-type-sel" data-i="${i}">
+            <option value="Manhã" class="badge-manha" ${a.t==='Manhã'?'selected':''}>🌅 Manhã</option>
+            <option value="Tarde" class="badge-tarde" ${a.t==='Tarde'?'selected':''}>☀️ Tarde</option>
+            <option value="Noite" class="badge-noite" ${a.t==='Noite'?'selected':''}>🌙 Noite</option>
+          </select>
+          <textarea class="form-textarea act-tx" data-i="${i}" placeholder="Descrição da atividade…">${a.tx}</textarea>
+          <button class="act-remove-btn" data-ri="${i}" title="Remover atividade">✕</button>
+        </div>`).join('');
+
+      // Listeners dinâmicos
+      container.querySelectorAll('.act-type-sel').forEach(sel => {
+        sel.addEventListener('change', e => {
+          const i = parseInt(e.target.dataset.i);
+          formActs[i].t = e.target.value;
+          const classMap = {'Manhã':'badge-manha','Tarde':'badge-tarde','Noite':'badge-noite'};
+          formActs[i].class = classMap[e.target.value];
+        });
+      });
+      container.querySelectorAll('.act-tx').forEach(ta => {
+        ta.addEventListener('input', e => {
+          formActs[parseInt(e.target.dataset.i)].tx = e.target.value;
+        });
+      });
+      container.querySelectorAll('.act-remove-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          formActs.splice(parseInt(e.target.dataset.ri), 1);
+          renderActList();
+        });
+      });
+    };
+
+    UI.openModal(isNew ? '＋ Adicionar Dia' : '✏️ Editar Dia', `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data (ex: 13/10 Dom)</label>
+          <input class="form-input" id="f_date" value="${day.date}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Número (ex: D1, FIM)</label>
+          <input class="form-input" id="f_num" value="${day.num}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Título do Dia</label>
+          <input class="form-input" id="f_title" value="${day.title}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cidade</label>
+          <input class="form-input" id="f_city" value="${day.city}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL da Imagem</label>
+        <input class="form-input" id="f_img" value="${day.img}" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Atividades</label>
+        <div class="act-list" id="actListContainer"></div>
+        <button class="add-act-inline-btn" id="addActBtn" style="margin-top:10px">＋ Adicionar Atividade</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">💡 Dica do Dia</label>
+        <textarea class="form-textarea" id="f_tip">${day.tip}</textarea>
+      </div>`,
+      [
+        { label: isNew ? '＋ Adicionar Dia' : '💾 Salvar Alterações', cls: 'tb-btn-primary', action: () => {
+          const updated = {
+            date: document.getElementById('f_date').value.trim(),
+            num: document.getElementById('f_num').value.trim(),
+            title: document.getElementById('f_title').value.trim(),
+            city: document.getElementById('f_city').value.trim(),
+            img: document.getElementById('f_img').value.trim(),
+            tip: document.getElementById('f_tip').value.trim(),
+            acts: formActs
+          };
+          if(!updated.title) { UI.showToast('Preencha o título do dia.', 'error'); return; }
+
+          if(isNew) AppState.sections[secIdx].days.push(updated);
+          else AppState.sections[secIdx].days[dayIdx] = updated;
+
+          Storage.save();
+          Renderer.renderTimeline();
+          Renderer.renderFilters();
+          UI.closeModal();
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
+
+    // Renderiza lista de atividades após abrir o modal
+    setTimeout(() => {
+      renderActList();
+      document.getElementById('addActBtn').addEventListener('click', () => {
+        formActs.push({t:'Manhã', class:'badge-manha', tx:''});
+        renderActList();
+      });
+    }, 50);
+  },
+
+  /** Confirma e remove um dia */
+  confirmDeleteDay(secIdx, dayIdx) {
+    const title = AppState.sections[secIdx].days[dayIdx].title;
+    UI.showConfirm(
+      '🗑', `Remover o dia "${title}"?`,
+      'Esta ação não pode ser desfeita.',
+      () => {
+        AppState.sections[secIdx].days.splice(dayIdx, 1);
+        Storage.save();
+        Renderer.renderTimeline();
+        UI.showToast(`Dia "${title}" removido.`);
+      }
+    );
+  },
+
+  /** Duplica um dia dentro da mesma seção */
+  duplicateDay(secIdx, dayIdx) {
+    const clone = JSON.parse(JSON.stringify(AppState.sections[secIdx].days[dayIdx]));
+    clone.title += ' (cópia)';
+    AppState.sections[secIdx].days.splice(dayIdx + 1, 0, clone);
+    Storage.save();
+    Renderer.renderTimeline();
+    UI.showToast('Dia duplicado! ⧉', 'success');
+  },
+
+  /* ── Edição do Hero ── */
+  openHeroModal() {
+    const h = AppState.hero;
+    UI.openModal('🏷 Editar Cabeçalho', `
+      <div class="form-group">
+        <label class="form-label">Eyebrow (etiqueta topo)</label>
+        <input class="form-input" id="f_eyebrow" value="${h.eyebrow}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Título principal</label>
+        <input class="form-input" id="f_htitle" value="${h.title}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subtítulo</label>
+        <input class="form-input" id="f_hsub" value="${h.subtitle}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estatísticas (número / legenda)</label>
+        ${h.stats.map((s,i) => `
+          <div class="form-row" style="margin-bottom:8px">
+            <input class="form-input stat-num-f" data-i="${i}" value="${s.num}" placeholder="Número">
+            <input class="form-input stat-lbl-f" data-i="${i}" value="${s.lbl}" placeholder="Legenda">
+          </div>`).join('')}
+      </div>`,
+      [
+        { label: '💾 Salvar', cls: 'tb-btn-primary', action: () => {
+          AppState.hero.eyebrow = document.getElementById('f_eyebrow').value;
+          AppState.hero.title = document.getElementById('f_htitle').value;
+          AppState.hero.subtitle = document.getElementById('f_hsub').value;
+          document.querySelectorAll('.stat-num-f').forEach((el,i) => { AppState.hero.stats[i].num = el.value; });
+          document.querySelectorAll('.stat-lbl-f').forEach((el,i) => { AppState.hero.stats[i].lbl = el.value; });
+          Storage.save();
+          Renderer.renderHero();
+          UI.closeModal();
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
+  },
+
+  /* ── Edição das Dicas ── */
+  openDicasModal() {
+    let formDicas = JSON.parse(JSON.stringify(AppState.dicas));
+
+    const renderDicaList = () => {
+      const c = document.getElementById('dicaFormList');
+      if(!c) return;
+      c.innerHTML = formDicas.map((d,i) => `
+        <div class="dica-list-item">
+          <input class="form-input" style="width:60px;padding:8px;flex-shrink:0" data-di="${i}" data-field="icon" value="${d.icon}" placeholder="🌸">
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <input class="form-input dica-field" data-di="${i}" data-field="title" value="${d.title}" placeholder="Título">
+            <textarea class="form-textarea dica-field" data-di="${i}" data-field="body" style="min-height:50px">${d.body}</textarea>
+          </div>
+          <button class="act-remove-btn" data-ri="${i}">✕</button>
+        </div>`).join('');
+
+      c.querySelectorAll('.dica-field, [data-field="icon"]').forEach(el => {
+        el.addEventListener('input', e => {
+          formDicas[e.target.dataset.di][e.target.dataset.field] = e.target.value;
+        });
+      });
+      c.querySelectorAll('.act-remove-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          formDicas.splice(parseInt(e.target.dataset.ri), 1);
+          renderDicaList();
+        });
+      });
+    };
+
+    UI.openModal('🌸 Editar Dicas de Ouro', `
+      <div class="dica-list" id="dicaFormList"></div>
+      <button class="add-act-inline-btn" id="addDicaBtn" style="margin-top:12px">＋ Adicionar Dica</button>`,
+      [
+        { label: '💾 Salvar Dicas', cls: 'tb-btn-primary', action: () => {
+          AppState.dicas = formDicas;
+          Storage.save();
+          Renderer.renderDicas();
+          UI.closeModal();
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
+
+    setTimeout(() => {
+      renderDicaList();
+      document.getElementById('addDicaBtn').addEventListener('click', () => {
+        formDicas.push({icon:'✨', title:'Nova Dica', body:''});
+        renderDicaList();
+      });
+    }, 50);
+  },
+
+  /* ── Busca em tempo real ── */
+  initSearch() {
+    document.getElementById('adminSearch').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.tl-section').forEach(sec => {
+        let hasMatch = false;
+        sec.querySelectorAll('.day-card').forEach(card => {
+          const text = card.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          card.style.display = match ? '' : 'none';
+          if(match) hasMatch = true;
+        });
+        sec.style.display = (!q || hasMatch) ? '' : 'none';
+      });
+      // Sincroniza filtros de destino com a busca
+      if(q) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.filter-btn[data-f="all"]').classList.add('active');
+      }
+    });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 6: UI — Utilitários de interface (modais, toasts)
+══════════════════════════════════════════════════════════════ */
+const UI = {
+  /**
+   * Abre o modal principal
+   * @param {string} title - Título do modal
+   * @param {string} bodyHtml - HTML do corpo
+   * @param {Array} actions - [{label, cls, action}]
+   */
+  openModal(title, bodyHtml, actions = []) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = bodyHtml;
+
+    const footer = document.getElementById('modalFooter');
+    footer.innerHTML = '';
+    actions.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = `tb-btn ${a.cls}`;
+      btn.textContent = a.label;
+      btn.addEventListener('click', a.action);
+      footer.appendChild(btn);
+    });
+
+    document.getElementById('modalOverlay').classList.add('open');
+  },
+
+  /** Fecha o modal principal */
+  closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  },
+
+  /**
+   * Exibe modal de confirmação
+   * @param {string} emoji
+   * @param {string} msg - Mensagem principal
+   * @param {string} sub - Submensagem
+   * @param {Function} onConfirm
+   */
+  showConfirm(emoji, msg, sub, onConfirm) {
+    document.getElementById('confirmEmoji').textContent = emoji;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmSub').textContent = sub;
+    document.getElementById('confirmOverlay').classList.add('open');
+
+    // Limpa e reattach listeners
+    const okBtn = document.getElementById('confirmOk');
+    const cancelBtn = document.getElementById('confirmCancel');
+    const newOk = okBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    newOk.addEventListener('click', () => {
+      document.getElementById('confirmOverlay').classList.remove('open');
+      onConfirm();
+    });
+    newCancel.addEventListener('click', () => {
+      document.getElementById('confirmOverlay').classList.remove('open');
+    });
+  },
+
+  /**
+   * Exibe uma notificação toast
+   * @param {string} msg
+   * @param {'success'|'error'|''} type
+   */
+  showToast(msg, type = '') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'} ${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; toast.style.transition = 'all 0.3s'; }, 2500);
+    setTimeout(() => toast.remove(), 2900);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO 7: GeoWeather — Clima e localização por cidade
+   Usa Open-Meteo (gratuito, sem API key) para temperatura real.
+   O Google Maps Embed é carregado via iframe sem necessidade de chave.
+══════════════════════════════════════════════════════════════ */
+const GeoWeather = {
+
+  /* Mapa de cidades mencionadas no roteiro → coordenadas e label */
+  CITIES: {
+    // Padrão fallback
+    default:       { lat: 35.6762, lon: 139.6503, name: 'Japão',          mapQuery: 'Japan' },
+    // Tóquio e bairros
+    shinjuku:      { lat: 35.6938, lon: 139.7034, name: 'Shinjuku',       mapQuery: 'Shinjuku, Tokyo, Japan' },
+    akihabara:     { lat: 35.7021, lon: 139.7744, name: 'Akihabara',      mapQuery: 'Akihabara, Tokyo, Japan' },
+    sumida:        { lat: 35.7101, lon: 139.8107, name: 'Sumida',         mapQuery: 'Tokyo Skytree, Sumida, Japan' },
+    asakusa:       { lat: 35.7148, lon: 139.7967, name: 'Asakusa',        mapQuery: 'Senso-ji, Asakusa, Tokyo, Japan' },
+    odaiba:        { lat: 35.6267, lon: 139.7756, name: 'Odaiba',         mapQuery: 'Odaiba, Tokyo, Japan' },
+    harajuku:      { lat: 35.6702, lon: 139.7027, name: 'Harajuku',       mapQuery: 'Harajuku, Tokyo, Japan' },
+    shibuya:       { lat: 35.6581, lon: 139.7014, name: 'Shibuya',        mapQuery: 'Shibuya Crossing, Tokyo, Japan' },
+    toyosu:        { lat: 35.6441, lon: 139.7954, name: 'Toyosu',         mapQuery: 'TeamLab Planets, Toyosu, Tokyo, Japan' },
+    ginza:         { lat: 35.6714, lon: 139.7659, name: 'Ginza',          mapQuery: 'Ginza, Tokyo, Japan' },
+    urayasu:       { lat: 35.6327, lon: 139.8800, name: 'Tokyo DisneySea', mapQuery: 'Tokyo DisneySea, Urayasu, Japan' },
+    tóquio:        { lat: 35.6762, lon: 139.6503, name: 'Tóquio',         mapQuery: 'Tokyo, Japan' },
+    // Hakone
+    hakone:        { lat: 35.2323, lon: 139.1069, name: 'Hakone',         mapQuery: 'Hakone, Kanagawa, Japan' },
+    // Alpes japoneses
+    takayama:      { lat: 36.1408, lon: 137.2524, name: 'Takayama',       mapQuery: 'Takayama, Gifu, Japan' },
+    'shirakawa-go':{ lat: 36.2573, lon: 136.9065, name: 'Shirakawa-go',   mapQuery: 'Shirakawa-go, Japan' },
+    shirakawa:     { lat: 36.2573, lon: 136.9065, name: 'Shirakawa-go',   mapQuery: 'Shirakawa-go, Japan' },
+    // Quioto
+    fushimi:       { lat: 34.9671, lon: 135.7727, name: 'Fushimi Inari',  mapQuery: 'Fushimi Inari Taisha, Kyoto, Japan' },
+    'kinkaku / gion':{ lat: 35.0394, lon: 135.7292, name: 'Kinkaku-ji',   mapQuery: 'Kinkaku-ji, Kyoto, Japan' },
+    kinkaku:       { lat: 35.0394, lon: 135.7292, name: 'Kinkaku-ji',     mapQuery: 'Kinkaku-ji, Kyoto, Japan' },
+    arashiyama:    { lat: 35.0094, lon: 135.6761, name: 'Arashiyama',     mapQuery: 'Arashiyama Bamboo Grove, Kyoto, Japan' },
+    quioto:        { lat: 35.0116, lon: 135.7681, name: 'Quioto',         mapQuery: 'Kyoto, Japan' },
+    kyoto:         { lat: 35.0116, lon: 135.7681, name: 'Quioto',         mapQuery: 'Kyoto, Japan' },
+    nara:          { lat: 34.6851, lon: 135.8048, name: 'Nara',           mapQuery: 'Nara Park, Nara, Japan' },
+    // Osaka
+    osaka:         { lat: 34.6937, lon: 135.5023, name: 'Osaka',          mapQuery: 'Osaka, Japan' },
+    dotonbori:     { lat: 34.6689, lon: 135.5024, name: 'Dotonbori',      mapQuery: 'Dotonbori, Osaka, Japan' },
+    'osaka – usj': { lat: 34.6654, lon: 135.4323, name: 'Universal Studios Japan', mapQuery: 'Universal Studios Japan, Osaka' },
+    himeji:        { lat: 34.8394, lon: 134.6939, name: 'Himeji',         mapQuery: 'Himeji Castle, Japan' },
+    // Hiroshima
+    hiroshima:     { lat: 34.3853, lon: 132.4553, name: 'Hiroshima',      mapQuery: 'Peace Memorial Park, Hiroshima, Japan' },
+    miyajima:      { lat: 34.2957, lon: 132.3195, name: 'Miyajima',       mapQuery: 'Itsukushima Shrine, Miyajima, Japan' },
+    // Aeroporto
+    'narita / haneda': { lat: 35.7647, lon: 140.3863, name: 'Aeroporto de Narita', mapQuery: 'Narita International Airport, Japan' },
+  },
+
+  /**
+   * Resolve a cidade do dia para coordenadas.
+   * Tenta bater na tabela CITIES por palavra-chave (case-insensitive).
+   */
+  resolveCity(cityStr) {
+    const key = cityStr.toLowerCase().trim();
+    // Tentativa exata
+    if(this.CITIES[key]) return this.CITIES[key];
+    // Busca por substring em qualquer parte
+    for(const [k, v] of Object.entries(this.CITIES)) {
+      if(k !== 'default' && (key.includes(k) || k.includes(key.split(/[\/,&]/)[0].trim()))) {
+        return v;
+      }
+    }
+    return this.CITIES.default;
+  },
+
+  /* Códigos WMO de clima → emoji + descrição */
+  WMO: {
+    0:  {icon:'☀️', desc:'Céu limpo'},
+    1:  {icon:'🌤️', desc:'Principalmente limpo'},
+    2:  {icon:'⛅', desc:'Parcialmente nublado'},
+    3:  {icon:'☁️', desc:'Nublado'},
+    45: {icon:'🌫️', desc:'Névoa'},
+    48: {icon:'🌫️', desc:'Névoa com gelo'},
+    51: {icon:'🌦️', desc:'Garoa leve'},
+    53: {icon:'🌦️', desc:'Garoa moderada'},
+    55: {icon:'🌧️', desc:'Garoa intensa'},
+    61: {icon:'🌧️', desc:'Chuva leve'},
+    63: {icon:'🌧️', desc:'Chuva moderada'},
+    65: {icon:'🌧️', desc:'Chuva forte'},
+    71: {icon:'❄️', desc:'Neve leve'},
+    73: {icon:'❄️', desc:'Neve moderada'},
+    75: {icon:'❄️', desc:'Neve intensa'},
+    80: {icon:'🌦️', desc:'Pancadas leves'},
+    81: {icon:'🌧️', desc:'Pancadas moderadas'},
+    82: {icon:'⛈️', desc:'Pancadas fortes'},
+    95: {icon:'⛈️', desc:'Trovoada'},
+    99: {icon:'⛈️', desc:'Trovoada com granizo'},
+  },
+
+  /** Cache em memória para evitar múltiplas requisições para a mesma coord */
+  _cache: {},
+
+  /**
+   * Busca clima atual via Open-Meteo e renderiza no widget.
+   * @param {HTMLElement} widget - .weather-widget com data-lat, data-lon, data-city
+   */
+  async fetchAndRender(widget) {
+    const lat  = widget.dataset.lat;
+    const lon  = widget.dataset.lon;
+    const city = widget.dataset.city;
+    const cacheKey = `${lat},${lon}`;
+
+    try {
+      let data;
+      if(this._cache[cacheKey]) {
+        data = this._cache[cacheKey];
+      } else {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+          + `&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m`
+          + `&daily=temperature_2m_max,temperature_2m_min`
+          + `&timezone=Asia/Tokyo&forecast_days=1`;
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        data = await res.json();
+        this._cache[cacheKey] = data;
+      }
+
+      const cur   = data.current;
+      const daily = data.daily;
+      const temp  = Math.round(cur.temperature_2m);
+      const feels = Math.round(cur.apparent_temperature);
+      const tMax  = Math.round(daily.temperature_2m_max[0]);
+      const tMin  = Math.round(daily.temperature_2m_min[0]);
+      const wmo   = this.WMO[cur.weathercode] || {icon:'🌡️', desc:'—'};
+
+      widget.querySelector('.weather-icon').textContent = wmo.icon;
+      widget.querySelector('.weather-info').innerHTML = `
+        <div class="weather-temp">${temp}<sup>°C</sup></div>
+        <div class="weather-desc">${wmo.desc} · Sensação ${feels}°C</div>
+        <div class="weather-range">↑ ${tMax}° / ↓ ${tMin}° · ${city}</div>`;
+
+    } catch(err) {
+      widget.querySelector('.weather-info').innerHTML =
+        `<div class="weather-error">Clima indisponível no momento</div>`;
+    }
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   INICIALIZAÇÃO
+   Ordem: carregar dados → gerar fundo → renderizar tudo → eventos
+══════════════════════════════════════════════════════════════ */
+function init() {
+  // 1. Carrega dados: localStorage tem prioridade sobre os defaults
+  const saved = Storage.load();
+  AppState = saved || JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+  // 2. Gera o fundo animado com emojis
+  const shapes = ['🌸','🍃','✨','🍡','🍵','☁️','🤍'];
+  const bgContainer = document.getElementById('floatingBg');
+  for(let i = 0; i < 25; i++) {
+    const el = document.createElement('div');
+    el.className = 'float-item';
+    el.innerText = shapes[Math.floor(Math.random() * shapes.length)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.animationDuration = (Math.random() * 15 + 10) + 's';
+    el.style.animationDelay = (Math.random() * -20) + 's';
+    el.style.fontSize = (Math.random() * 15 + 15) + 'px';
+    bgContainer.appendChild(el);
+  }
+
+  // 3. Renderiza toda a interface
+  Renderer.renderAll();
+
+  // 4. Inicializa busca
+  AdminPanel.initSearch();
+
+  // 5. Evento: botão flutuante de toggle
+  document.getElementById('adminToggleBtn').addEventListener('click', () => AdminPanel.toggle());
+
+  // 6. Eventos da toolbar
+  document.getElementById('btnAddSection').addEventListener('click', () => AdminPanel.openSectionModal(null));
+  document.getElementById('btnExport').addEventListener('click',     () => Storage.exportJSON());
+  document.getElementById('btnResetData').addEventListener('click',  () => {
+    UI.showConfirm('⚠️', 'Restaurar dados originais?', 'Todas as suas edições serão perdidas.', () => Storage.reset());
+  });
+  document.getElementById('btnImportTrigger').addEventListener('click', () => {
+    document.getElementById('btnImport').click();
+  });
+  document.getElementById('btnImport').addEventListener('change', e => {
+    if(e.target.files[0]) Storage.importJSON(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('btnEditDicas').addEventListener('click', () => AdminPanel.openDicasModal());
+  document.getElementById('btnEditHero').addEventListener('click',  () => AdminPanel.openHeroModal());
+
+  // 7. Fecha modais ao clicar no overlay
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('modalOverlay')) UI.closeModal();
+  });
+  document.getElementById('modalCloseBtn').addEventListener('click', () => UI.closeModal());
+  document.getElementById('confirmOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('confirmOverlay')) {
+      document.getElementById('confirmOverlay').classList.remove('open');
+    }
+  });
+
+  // 8. Notifica se carregou dados salvos
+  if(saved) {
+    setTimeout(() => UI.showToast('Roteiro carregado do armazenamento local ✓', 'success'), 600);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+
+</body>
+</html>
