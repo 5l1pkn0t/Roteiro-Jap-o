@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Lua de Mel no Japão&quot;,&quot;short_name&quot;:&quot;Japão 🌸&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23f7f9f7&quot;,&quot;theme_color&quot;:&quot;%23a390e4&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+<meta name="theme-color" content="#a390e4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Japão 🌸">
 <style>
   /* ── RESET & VARIÁVEIS ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -204,8 +209,25 @@
   .badge-manha { background: #ffe4cc; color: #d97726; }
   .badge-tarde { background: var(--green-pastel); color: var(--green-dark); }
   .badge-noite { background: var(--lilac-pastel); color: var(--lilac-dark); }
+  .act-body { display: flex; flex-direction: column; gap: 6px; flex: 1; }
   .act-text { font-size: 15px; line-height: 1.6; color: var(--ink); }
   .act-text strong { color: var(--lilac-dark); }
+  .act-location-pin {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: linear-gradient(135deg, #e8f4ff, #dff0ff);
+    border: 1px solid #b3d8ff; border-radius: 20px;
+    padding: 4px 12px 4px 8px; font-size: 12.5px; font-weight: 600;
+    color: #1a6fb3; text-decoration: none; width: fit-content;
+    transition: all 0.2s ease; cursor: pointer; box-shadow: 0 1px 4px rgba(26,111,179,0.12);
+  }
+  .act-location-pin:hover {
+    background: linear-gradient(135deg, #1a6fb3, #2e86d4);
+    color: #fff; border-color: #1a6fb3;
+    box-shadow: 0 3px 10px rgba(26,111,179,0.3); transform: translateY(-1px);
+  }
+  .act-location-pin:hover .pin-icon { filter: grayscale(1) brightness(10); }
+  .pin-icon { font-size: 14px; }
+  .pin-label { line-height: 1; }
   .tip-row {
     display: flex; gap: 16px; align-items: center;
     background: linear-gradient(to right, rgba(208, 244, 222, 0.4), rgba(229, 217, 242, 0.4));
@@ -215,44 +237,76 @@
   .tip-icon { font-size: 24px; flex-shrink: 0; animation: floatUI 2.5s ease-in-out infinite alternate; }
   .tip-text { font-size: 14px; line-height: 1.6; color: var(--ink); font-weight: 600; }
 
-  /* ── WEATHER + MAP WIDGET ── */
+  /* ── LEAFLET (CDN) ── */
+  @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+  /* ── WEATHER WIDGET REFORMULADO ── */
   .card-geo-bar {
     display: flex; gap: 12px; margin: 0 24px 20px;
     flex-wrap: wrap; align-items: stretch;
   }
   .weather-widget {
-    flex: 1; min-width: 180px;
+    flex: 1; min-width: 200px;
     background: linear-gradient(135deg, rgba(229,217,242,0.5) 0%, rgba(208,244,222,0.5) 100%);
     border: 1.5px solid rgba(255,255,255,0.8);
-    border-radius: var(--radius-sm); padding: 16px 20px;
-    display: flex; align-items: center; gap: 14px;
-    backdrop-filter: blur(8px);
+    border-radius: var(--radius-sm); padding: 16px 18px;
+    backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 10px;
   }
+  .weather-top { display: flex; align-items: center; gap: 12px; }
   .weather-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
-  .weather-info { flex: 1; }
-  .weather-temp {
-    font-size: 26px; font-weight: 800; color: var(--lilac-dark);
-    font-family: 'Lora', serif; line-height: 1;
-  }
+  .weather-main { flex: 1; }
+  .weather-temp { font-size: 28px; font-weight: 800; color: var(--lilac-dark); font-family: 'Lora', serif; line-height: 1; }
   .weather-temp sup { font-size: 14px; font-weight: 700; }
-  .weather-desc { font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .weather-range { font-size: 11px; color: var(--green-dark); font-weight: 800; margin-top: 4px; }
-  .weather-loading { font-size: 13px; color: var(--muted); font-weight: 600; }
-  .weather-error  { font-size: 12px; color: #c0392b;   font-weight: 600; }
+  .weather-desc { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 3px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .weather-source { font-size: 10px; color: var(--muted); font-weight: 600; }
+  /* Períodos do dia */
+  .weather-periods { display: flex; gap: 6px; }
+  .weather-period {
+    flex: 1; background: rgba(255,255,255,0.6); border-radius: 10px;
+    padding: 7px 6px; text-align: center; border: 1px solid rgba(255,255,255,0.8);
+  }
+  .wp-label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .wp-icon  { font-size: 16px; margin: 3px 0; }
+  .wp-temp  { font-size: 14px; font-weight: 800; color: var(--lilac-dark); }
+  /* Barra de chuva */
+  .weather-rain-row { display: flex; align-items: center; gap: 8px; }
+  .rain-label { font-size: 11px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+  .rain-bar-wrap { flex: 1; height: 6px; background: rgba(163,144,228,0.15); border-radius: 3px; overflow: hidden; }
+  .rain-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #82b596, #a390e4); transition: width 0.6s ease; }
+  .rain-pct { font-size: 11px; font-weight: 800; color: var(--lilac-dark); min-width: 28px; text-align: right; }
+  /* Previsão 7 dias */
+  .weather-forecast { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .weather-forecast::-webkit-scrollbar { display: none; }
+  .forecast-chip {
+    flex-shrink: 0; background: rgba(255,255,255,0.65); border-radius: 10px;
+    padding: 6px 7px; text-align: center; min-width: 42px;
+    border: 1px solid rgba(255,255,255,0.8);
+  }
+  .forecast-chip.today { background: var(--lilac-pastel); border-color: var(--lilac-dark); }
+  .fc-day  { font-size: 9px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+  .fc-icon { font-size: 13px; margin: 2px 0; }
+  .fc-temp { font-size: 12px; font-weight: 800; color: var(--lilac-dark); }
+  .fc-range { font-size: 9px; color: var(--muted); font-weight: 700; }
+  /* loading / error states */
+  .weather-loading { font-size: 13px; color: var(--muted); font-weight: 600; padding: 10px 0; }
+  .weather-error   { font-size: 12px; color: #c0392b; font-weight: 600; }
+  .weather-badge {
+    display: inline-block; font-size: 10px; font-weight: 800;
+    padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+  }
+  .badge-historico { background: #fff9e6; color: #d97726; }
+  .badge-previsao  { background: var(--green-pastel); color: var(--green-dark); }
 
+  /* ── MAPA LEAFLET (substitui o iframe) ── */
   .map-widget {
-    flex: 2; min-width: 220px; min-height: 140px;
+    flex: 2; min-width: 220px; min-height: 155px;
     border-radius: var(--radius-sm); overflow: hidden;
     position: relative; border: 1.5px solid rgba(255,255,255,0.8);
     box-shadow: 0 4px 16px rgba(163,144,228,0.10);
   }
-  .map-widget iframe {
-    width: 100%; height: 100%; min-height: 140px;
-    border: none; display: block;
-    filter: saturate(0.9) hue-rotate(5deg);
-  }
+  .map-widget-inner { width: 100%; height: 100%; min-height: 155px; }
   .map-open-link {
-    position: absolute; bottom: 10px; right: 10px;
+    position: absolute; bottom: 8px; right: 8px; z-index: 500;
     background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
     color: var(--lilac-dark); font-size: 11px; font-weight: 800;
     padding: 5px 12px; border-radius: 20px;
@@ -263,9 +317,33 @@
   }
   .map-open-link:hover { background: var(--lilac-dark); color: #fff; transform: scale(1.05); }
 
+  /* ── MAPA FIXO DA ROTA (canto inferior direito) ── */
+  #sticky-map-wrap {
+    position: fixed; bottom: 32px; right: 32px; z-index: 800;
+    width: 280px; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 12px 40px rgba(74,74,89,0.18);
+    border: 2px solid var(--lilac-pastel);
+    transition: all 0.35s cubic-bezier(0.25,0.8,0.25,1);
+    display: none;
+  }
+  #sticky-map-wrap.visible { display: block; }
+  #sticky-map { width: 100%; height: 200px; }
+  #sticky-map-label {
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+    padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--lilac-pastel);
+  }
+  #sticky-map-city { font-size: 13px; font-weight: 800; color: var(--lilac-dark); }
+  #sticky-map-close {
+    background: none; border: none; cursor: pointer; font-size: 16px;
+    color: var(--muted); line-height: 1; padding: 0;
+  }
+
   @media (max-width: 768px) {
     .card-geo-bar { margin: 0 16px 16px; flex-direction: column; }
     .map-widget { min-height: 160px; }
+    #sticky-map-wrap { width: 240px; bottom: 80px; right: 12px; }
+    #sticky-map { height: 160px; }
   }
 
   /* ── DICAS GRID ── */
@@ -522,15 +600,252 @@
     display: none; gap: 8px; margin-top: 8px; margin-left: 16px;
   }
   .admin-active .section-admin-controls { display: flex; }
-</style>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#a390e4">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Roteiro Japão">
+  /* ══════════════════════════════════════════
+     FEATURE: CONTADOR REGRESSIVO
+  ══════════════════════════════════════════ */
+  /* ── CONTAGEM REGRESSIVA ── */
+  .countdown-bar {
+    margin-top: 36px;
+    background: rgba(255,255,255,0.60);
+    backdrop-filter: blur(16px);
+    padding: 22px 28px 20px;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.85);
+    box-shadow: 0 8px 32px rgba(163,144,228,0.18), 0 1px 0 rgba(255,255,255,0.9) inset;
+    display: inline-flex; flex-direction: column; align-items: center;
+    gap: 14px; width: fit-content; margin-left: auto; margin-right: auto;
+    position: relative; overflow: hidden;
+  }
+  .countdown-bar::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--lilac-dark), #a8d8b0, var(--lilac-dark));
+    background-size: 200% 100%; animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .countdown-label {
+    font-size: 11px; font-weight: 900; color: var(--lilac-dark);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .countdown-units { display: flex; gap: 8px; align-items: flex-end; }
+  .countdown-unit {
+    display: flex; flex-direction: column; align-items: center;
+    background: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(240,236,255,0.8));
+    border-radius: 18px; padding: 12px 16px 10px;
+    min-width: 64px; border: 1px solid rgba(163,144,228,0.2);
+    box-shadow: 0 4px 12px rgba(163,144,228,0.12), 0 1px 0 #fff inset;
+    transition: transform 0.2s;
+  }
+  .countdown-unit:hover { transform: translateY(-3px) scale(1.05); }
+  .countdown-num {
+    font-family: 'Lora', serif; font-size: 36px; font-weight: 700;
+    color: var(--lilac-dark); line-height: 1; min-width: 2ch; text-align: center;
+    transition: opacity 0.15s;
+  }
+  .countdown-num.flip { opacity: 0; }
+  .countdown-sub {
+    font-size: 9px; color: var(--muted); font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.12em; margin-top: 5px;
+  }
+  .countdown-sep {
+    font-size: 28px; color: var(--lilac-dark); font-weight: 700;
+    opacity: 0.35; line-height: 1; margin-bottom: 18px;
+    animation: blink 1s step-start infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.1; } }
+  .countdown-ended {
+    font-family: 'Lora', serif; font-size: 18px; font-style: italic;
+    color: var(--lilac-dark); font-weight: 600; text-align: center; padding: 4px 8px;
+  }
+  .countdown-viagem {
+    font-size: 12px; color: #3a9e6e; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    animation: pulseGreen 1.5s ease-in-out infinite;
+  }
+  @keyframes pulseGreen { 0%,100%{opacity:1} 50%{opacity:0.55} }
+  @media(max-width:600px) {
+    .countdown-unit { min-width: 50px; padding: 9px 10px 8px; }
+    .countdown-num  { font-size: 26px; }
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE: BARRA DE AÇÕES FLUTUANTE (Share + Converter + Install)
+  ══════════════════════════════════════════ */
+  .fab-group {
+    position: fixed; bottom: 32px; left: 32px; z-index: 900;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+  }
+  .fab-mini {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+    border: 1px solid rgba(163,144,228,0.2);
+    border-radius: 30px; padding: 9px 16px;
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    cursor: pointer; box-shadow: 0 4px 16px rgba(163,144,228,0.18);
+    transition: all 0.25s ease; white-space: nowrap;
+    font-family: 'Nunito', sans-serif; text-decoration: none;
+  }
+  .fab-mini:hover { background: var(--lilac-dark); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(163,144,228,0.35); }
+  .fab-mini span { font-size: 16px; }
+
+  /* Painel conversor */
+  .converter-panel {
+    display: none; position: fixed; bottom: 130px; left: 32px; z-index: 910;
+    background: #fff; border-radius: 20px; padding: 20px 24px;
+    box-shadow: 0 16px 48px rgba(74,74,89,0.18);
+    border: 1px solid rgba(163,144,228,0.2);
+    min-width: 240px; animation: slideUpFade 0.25s ease;
+  }
+  .converter-panel.open { display: block; }
+  .conv-title { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .conv-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .conv-input {
+    flex: 1; padding: 10px 14px; border: 2px solid var(--border);
+    border-radius: 12px; font-size: 16px; font-weight: 700;
+    font-family: 'Nunito', sans-serif; color: var(--ink); outline: none;
+    width: 100%; transition: border-color 0.2s;
+  }
+  .conv-input:focus { border-color: var(--lilac-dark); }
+  .conv-currency { font-size: 12px; font-weight: 800; color: var(--muted); min-width: 36px; text-align: right; }
+  .conv-rate { font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .conv-result {
+    background: var(--lilac-pastel); border-radius: 12px;
+    padding: 12px 14px; text-align: center;
+    font-family: 'Lora', serif; font-size: 22px; font-weight: 600;
+    color: var(--lilac-dark); margin: 10px 0 4px;
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE: MAPA GERAL DA ROTA
+  ══════════════════════════════════════════ */
+  .route-section {
+    margin-top: 70px; margin-bottom: 60px;
+  }
+  .route-heading {
+    font-family: 'Lora', serif; font-size: 36px; margin-bottom: 8px;
+    font-weight: 600; text-align: center; color: var(--lilac-dark);
+  }
+  .route-sub { text-align: center; font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 28px; }
+  .route-map-wrap {
+    border-radius: 24px; overflow: hidden; position: relative;
+    border: 2px solid var(--lilac-pastel);
+    box-shadow: 0 12px 40px rgba(163,144,228,0.15);
+    background: var(--green-pastel);
+  }
+  .route-map-wrap iframe { width: 100%; height: 420px; border: none; display: block; }
+  .route-cities {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin-top: 16px;
+  }
+  .route-city-badge {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
+    border: 1px solid rgba(163,144,228,0.2);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; font-weight: 800; color: var(--ink);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .route-city-badge .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--lilac-dark); flex-shrink: 0;
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE: CHECKLIST PRÉ-VIAGEM
+  ══════════════════════════════════════════ */
+  .checklist-section { margin-top: 70px; }
+  .checklist-heading {
+    font-family: 'Lora', serif; font-size: 36px; margin-bottom: 8px;
+    font-weight: 600; text-align: center; color: var(--green-dark);
+  }
+  .checklist-sub { text-align: center; font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 20px; }
+  .checklist-progress-wrap { margin-bottom: 28px; }
+  .checklist-progress-info {
+    display: flex; justify-content: space-between;
+    font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 8px;
+  }
+  .checklist-progress-info .done { color: var(--green-dark); }
+  .checklist-bar {
+    height: 10px; background: var(--border); border-radius: 99px; overflow: hidden;
+  }
+  .checklist-bar-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--green-dark), var(--lilac-dark));
+    transition: width 0.4s cubic-bezier(0.25,0.8,0.25,1);
+  }
+  .checklist-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .checklist-group {
+    background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
+    border: 1.5px solid var(--border); border-radius: 20px; padding: 20px 22px;
+  }
+  .checklist-group-title {
+    font-size: 14px; font-weight: 800; color: var(--lilac-dark);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .checklist-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px dashed var(--border); cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item.checked { opacity: 0.45; }
+  .checklist-item.checked .checklist-text { text-decoration: line-through; }
+  .checklist-cb {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 2px solid var(--lilac-dark); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; background: transparent;
+  }
+  .checklist-item.checked .checklist-cb {
+    background: var(--lilac-dark); border-color: var(--lilac-dark);
+  }
+  .checklist-item.checked .checklist-cb::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 800; }
+  .checklist-text { font-size: 14px; color: var(--ink); font-weight: 600; line-height: 1.4; }
+
+  /* PWA Install banner */
+  .pwa-banner {
+    display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 5000;
+    background: linear-gradient(135deg, var(--lilac-dark), var(--green-dark));
+    color: #fff; padding: 12px 20px;
+    align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pwa-banner.show { display: flex; }
+  .pwa-banner-text { font-size: 14px; font-weight: 700; flex: 1; }
+  .pwa-banner-actions { display: flex; gap: 8px; }
+  .pwa-install-btn {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; border-radius: 20px; padding: 6px 16px;
+    font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif;
+    transition: background 0.2s;
+  }
+  .pwa-install-btn:hover { background: rgba(255,255,255,0.35); }
+  .pwa-dismiss-btn {
+    background: transparent; border: none; color: rgba(255,255,255,0.7);
+    font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;
+  }
+
+  @media (max-width: 768px) {
+    .fab-group { bottom: 24px; left: 16px; }
+    .converter-panel { left: 16px; bottom: 120px; min-width: 200px; }
+    .route-map-wrap iframe { height: 280px; }
+    .checklist-groups { grid-template-columns: 1fr; }
+    .countdown-unit { min-width: 44px; padding: 6px 10px; }
+    .countdown-num { font-size: 20px; }
+  }
+</style>
 </head>
 <body>
+
+<!-- PWA Install Banner -->
+<div class="pwa-banner" id="pwaBanner">
+  <div class="pwa-banner-text">🌸 Instale o roteiro no seu celular para acessar offline no Japão!</div>
+  <div class="pwa-banner-actions">
+    <button class="pwa-install-btn" id="pwaInstallBtn">📲 Instalar</button>
+    <button class="pwa-dismiss-btn" id="pwaDismissBtn">✕</button>
+  </div>
+</div>
 
 <!-- Fundo animado -->
 <div class="floating-bg" id="floatingBg"></div>
@@ -548,6 +863,8 @@
   <div class="tb-btn-sep"></div>
   <button class="tb-btn tb-btn-neutral" id="btnEditDicas">🌸 Editar Dicas</button>
   <button class="tb-btn tb-btn-neutral" id="btnEditHero">🏷 Editar Hero</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditChecklist">✅ Editar Checklist</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditFooter">📝 Editar Rodapé</button>
 </div>
 
 <header class="hero" id="heroSection"></header>
@@ -555,6 +872,30 @@
 <main class="container" id="mainContainer">
   <div class="filters" id="filters"></div>
   <div id="timeline"></div>
+
+  <!-- Mapa SVG da rota -->
+  <section class="route-section" id="routeSection">
+    <h2 class="route-heading">🗾 A Rota Completa</h2>
+    <p class="route-sub">23 dias percorrendo os destinos mais encantadores do Japão</p>
+    <div class="route-map-wrap" id="routeMapWrap">
+      <!-- SVG renderizado pelo RouteMap.render() -->
+    </div>
+    <div class="route-cities" id="routeCities"></div>
+  </section>
+
+  <!-- Checklist pré-viagem -->
+  <section class="checklist-section" id="checklistSection">
+    <h2 class="checklist-heading">✅ Checklist Pré-Viagem</h2>
+    <p class="checklist-sub">Tudo o que precisa estar pronto antes de embarcar</p>
+    <div class="checklist-progress-wrap">
+      <div class="checklist-progress-info">
+        <span>Progresso</span>
+        <span class="done" id="checklistProgressText">0 de 0 itens</span>
+      </div>
+      <div class="checklist-bar"><div class="checklist-bar-fill" id="checklistBarFill" style="width:0%"></div></div>
+    </div>
+    <div class="checklist-groups" id="checklistGroups"></div>
+  </section>
 
   <section class="dicas-section">
     <h2 class="dicas-heading">🌸 Dicas de Ouro 🌸</h2>
@@ -566,8 +907,39 @@
   </footer>
 </main>
 
+<!-- Mapa fixo (sticky) que aparece ao abrir um card -->
+<div id="sticky-map-wrap">
+  <div id="sticky-map"></div>
+  <div id="sticky-map-label">
+    <span id="sticky-map-city">📍 Japão</span>
+    <button id="sticky-map-close" title="Fechar mapa">✕</button>
+  </div>
+</div>
+
 <!-- Botão flutuante para ativar/desativar modo edição -->
 <button class="admin-toggle-btn" id="adminToggleBtn" title="Modo Edição">✏️</button>
+
+<!-- FAB grupo esquerdo: compartilhar, conversor, instalar -->
+<div class="fab-group" id="fabGroup">
+  <button class="fab-mini" id="fabShare"><span>🔗</span> Compartilhar</button>
+  <button class="fab-mini" id="fabConverter"><span>💴</span> BRL → JPY</button>
+  <button class="fab-mini" id="fabInstall" style="display:none"><span>📲</span> Instalar App</button>
+</div>
+
+<!-- Painel Conversor BRL → JPY -->
+<div class="converter-panel" id="converterPanel">
+  <div class="conv-title">💴 Conversor de Moeda</div>
+  <div class="conv-row">
+    <input class="conv-input" id="convBrl" type="number" placeholder="0" value="100">
+    <span class="conv-currency">BRL R$</span>
+  </div>
+  <div class="conv-result" id="convResult">— ¥</div>
+  <div class="conv-row">
+    <input class="conv-input" id="convJpy" type="number" placeholder="0">
+    <span class="conv-currency">JPY ¥</span>
+  </div>
+  <div class="conv-rate" id="convRate">Buscando cotação…</div>
+</div>
 
 <!-- Toast container -->
 <div class="toast-container" id="toastContainer"></div>
@@ -828,7 +1200,11 @@ const DEFAULT_DATA = {
     { icon:"🐾", title:"Mimos Felinos", body:"Os japoneses amam pets! As seções da Daiso e DonKi tem os sachês mais inusitados para a Luna e o Apolo." },
     { icon:"📱", title:"Suica Digital", body:"Colocar o cartão Suica na Apple Wallet/Google Pay facilita metrô, ônibus e até máquinas de suco nas ruas." },
     { icon:"🧳", title:"Viajem Leves", body:"O serviço Takuhaibin (envio de malas entre hotéis) é barato e essencial. Não entrem no trem bala com tralha!" }
-  ]
+  ],
+  footer: 'Feito com <span class="heart">💜</span> para Angelo &amp; Dani • Lua de Mel Japão 2024',
+  checklistGroups: null,
+  departure: '2026-10-13',
+  returnDate: '2026-11-05'
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -906,12 +1282,19 @@ const Storage = {
 ══════════════════════════════════════════════════════════════ */
 const Renderer = {
 
-  /** Renderiza tudo de uma vez (hero + filtros + timeline + dicas) */
+  /** Renderiza tudo de uma vez (hero + filtros + timeline + dicas + footer) */
   renderAll() {
     this.renderHero();
     this.renderFilters();
     this.renderTimeline();
     this.renderDicas();
+    this.renderFooter();
+  },
+
+  /** Renderiza o rodapé */
+  renderFooter() {
+    const el = document.getElementById('footerEl');
+    if (el && AppState.footer) el.innerHTML = AppState.footer;
   },
 
   /** Renderiza o cabeçalho hero com os dados do AppState.hero */
@@ -927,7 +1310,12 @@ const Renderer = {
       <div class="hero-eyebrow">${h.eyebrow}</div>
       <h1>${h.title}</h1>
       <p class="hero-sub">${h.subtitle}</p>
-      <div class="hero-stats">${statsHtml}</div>`;
+      <div class="hero-stats">${statsHtml}</div>
+      <div class="countdown-bar" id="countdownBar">
+        <span class="countdown-label">✈️ Embarque em</span>
+        <div class="countdown-units" id="countdownUnits"></div>
+      </div>`;
+    Countdown.init();
   },
 
   /** Renderiza os botões de filtro por destino */
@@ -960,7 +1348,8 @@ const Renderer = {
     AppState.sections.forEach((sec, secIdx) => {
       const wrap = document.createElement('div');
       wrap.className = 'tl-section';
-      wrap.dataset.id = sec.id;
+      wrap.dataset.id  = sec.id;
+      wrap.dataset.sec = sec.id;
       wrap.dataset.secIdx = secIdx;
       wrap.style.animationDelay = `${secIdx * 0.12}s`;
 
@@ -1021,10 +1410,9 @@ const Renderer = {
     const actsHtml = this.renderActivities(day.acts);
 
     // Resolve coordenadas e query de mapa para a cidade do dia
-    const geo = GeoWeather.resolveCity(day.city);
+    const geo     = GeoWeather.resolveCity(day.city);
     const mapQuery = encodeURIComponent(geo.mapQuery);
     const mapsUrl  = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
-    const embedUrl = `https://maps.google.com/maps?q=${mapQuery}&output=embed&z=13&hl=pt-BR`;
 
     card.innerHTML = `
       <div class="card-trigger">
@@ -1043,18 +1431,10 @@ const Renderer = {
           </div>
           <div class="card-geo-bar">
             <div class="weather-widget" data-lat="${geo.lat}" data-lon="${geo.lon}" data-city="${geo.name}">
-              <div class="weather-icon">🌡️</div>
-              <div class="weather-info">
-                <div class="weather-loading">Carregando clima…</div>
-              </div>
+              <div class="weather-loading">🌡️ Carregando clima…</div>
             </div>
-            <div class="map-widget">
-              <iframe
-                src="${embedUrl}"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                title="Mapa de ${day.city}">
-              </iframe>
+            <div class="map-widget" data-lat="${geo.lat}" data-lon="${geo.lon}">
+              <div class="map-widget-inner" style="width:100%;height:100%;min-height:155px;"></div>
               <a class="map-open-link" href="${mapsUrl}" target="_blank" rel="noopener">🗺 Abrir no Maps</a>
             </div>
           </div>
@@ -1075,18 +1455,30 @@ const Renderer = {
 
     // Expand/collapse ao clicar no trigger
     card.querySelector('.card-trigger').addEventListener('click', e => {
-      // No modo admin, só abre se não clicar no handle
       if(e.target.closest('.drag-handle')) return;
       const isOpen = card.classList.contains('open');
       document.querySelectorAll('.day-card').forEach(c => c.classList.remove('open'));
       if(!isOpen) {
         card.classList.add('open');
-        // Carrega clima ao abrir o card pela primeira vez
+
+        // Clima — carrega apenas na primeira abertura
         const ww = card.querySelector('.weather-widget');
         if(ww && !ww.dataset.loaded) {
           ww.dataset.loaded = '1';
           GeoWeather.fetchAndRender(ww);
         }
+
+        // Mapa Leaflet inline — inicia apenas na primeira abertura
+        const mw = card.querySelector('.map-widget');
+        if(mw && !mw.dataset.mapLoaded) {
+          mw.dataset.mapLoaded = '1';
+          const lat = parseFloat(mw.dataset.lat);
+          const lon = parseFloat(mw.dataset.lon);
+          GeoWeather.initCardMap(mw, lat, lon, mapsUrl);
+        }
+
+        // Atualiza o mapa fixo (sticky) para a cidade deste card
+        GeoWeather.flyTo(day.city, day.city);
       }
     });
 
@@ -1104,11 +1496,26 @@ const Renderer = {
    * @returns {string} HTML
    */
   renderActivities(acts) {
-    return acts.map(a => `
-      <div class="activity">
-        <span class="act-badge ${a.class}">${a.t}</span>
-        <span class="act-text">${a.tx}</span>
-      </div>`).join('');
+    return acts.map(a => {
+      let locationHtml = '';
+      if (a.location && a.location.trim()) {
+        // Monta URL para Google Maps com navegação ativada (modo directions/nav)
+        const encoded = encodeURIComponent(a.location);
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encoded}&travelmode=walking`;
+        locationHtml = `
+          <a class="act-location-pin" href="${mapsUrl}" target="_blank" rel="noopener" title="Abrir no GPS: ${a.location.replace(/"/g,'&quot;')}">
+            <span class="pin-icon">📍</span><span class="pin-label">${a.location}</span>
+          </a>`;
+      }
+      return `
+        <div class="activity">
+          <span class="act-badge ${a.class}">${a.t}</span>
+          <div class="act-body">
+            <span class="act-text">${a.tx}</span>
+            ${locationHtml}
+          </div>
+        </div>`;
+    }).join('');
   },
 
   /** Renderiza a grade de dicas */
@@ -1318,7 +1725,10 @@ const AdminPanel = {
             <option value="Tarde" class="badge-tarde" ${a.t==='Tarde'?'selected':''}>☀️ Tarde</option>
             <option value="Noite" class="badge-noite" ${a.t==='Noite'?'selected':''}>🌙 Noite</option>
           </select>
-          <textarea class="form-textarea act-tx" data-i="${i}" placeholder="Descrição da atividade…">${a.tx}</textarea>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <textarea class="form-textarea act-tx" data-i="${i}" placeholder="Descrição da atividade…" style="margin:0">${a.tx}</textarea>
+            <input class="form-input act-location" data-i="${i}" value="${(a.location||'').replace(/"/g,'&quot;')}" placeholder="📍 Local (ex: Senso-ji Temple, Asakusa, Tokyo)" style="font-size:13px">
+          </div>
           <button class="act-remove-btn" data-ri="${i}" title="Remover atividade">✕</button>
         </div>`).join('');
 
@@ -1334,6 +1744,11 @@ const AdminPanel = {
       container.querySelectorAll('.act-tx').forEach(ta => {
         ta.addEventListener('input', e => {
           formActs[parseInt(e.target.dataset.i)].tx = e.target.value;
+        });
+      });
+      container.querySelectorAll('.act-location').forEach(inp => {
+        inp.addEventListener('input', e => {
+          formActs[parseInt(e.target.dataset.i)].location = e.target.value;
         });
       });
       container.querySelectorAll('.act-remove-btn').forEach(btn => {
@@ -1441,6 +1856,29 @@ const AdminPanel = {
   /* ── Edição do Hero ── */
   openHeroModal() {
     const h = AppState.hero;
+    let formStats = JSON.parse(JSON.stringify(h.stats));
+
+    const renderStats = () => {
+      const c = document.getElementById('statsFormList');
+      if (!c) return;
+      c.innerHTML = formStats.map((s, i) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input class="form-input stat-num-f" data-i="${i}" value="${s.num}" placeholder="Número" style="width:80px;flex-shrink:0">
+          <input class="form-input stat-lbl-f" data-i="${i}" value="${s.lbl}" placeholder="Legenda" style="flex:1">
+          <button class="act-remove-btn stat-del-btn" data-i="${i}" title="Remover estatística">✕</button>
+        </div>`).join('');
+      c.querySelectorAll('.stat-num-f').forEach(el => el.addEventListener('input', e => {
+        formStats[parseInt(e.target.dataset.i)].num = e.target.value;
+      }));
+      c.querySelectorAll('.stat-lbl-f').forEach(el => el.addEventListener('input', e => {
+        formStats[parseInt(e.target.dataset.i)].lbl = e.target.value;
+      }));
+      c.querySelectorAll('.stat-del-btn').forEach(btn => btn.addEventListener('click', e => {
+        formStats.splice(parseInt(e.target.dataset.i), 1);
+        renderStats();
+      }));
+    };
+
     UI.openModal('🏷 Editar Cabeçalho', `
       <div class="form-group">
         <label class="form-label">Eyebrow (etiqueta topo)</label>
@@ -1455,27 +1893,42 @@ const AdminPanel = {
         <input class="form-input" id="f_hsub" value="${h.subtitle}">
       </div>
       <div class="form-group">
+        <label class="form-label">Data de partida (contagem regressiva)</label>
+        <input class="form-input" type="date" id="f_departure" value="${AppState.departure || '2026-10-13'}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data de retorno</label>
+        <input class="form-input" type="date" id="f_returnDate" value="${AppState.returnDate || '2026-11-05'}">
+      </div>
+      <div class="form-group">
         <label class="form-label">Estatísticas (número / legenda)</label>
-        ${h.stats.map((s,i) => `
-          <div class="form-row" style="margin-bottom:8px">
-            <input class="form-input stat-num-f" data-i="${i}" value="${s.num}" placeholder="Número">
-            <input class="form-input stat-lbl-f" data-i="${i}" value="${s.lbl}" placeholder="Legenda">
-          </div>`).join('')}
+        <div id="statsFormList"></div>
+        <button class="add-act-inline-btn" id="addStatBtn" style="margin-top:6px;font-size:12px">＋ Adicionar Estatística</button>
       </div>`,
       [
         { label: '💾 Salvar', cls: 'tb-btn-primary', action: () => {
-          AppState.hero.eyebrow = document.getElementById('f_eyebrow').value;
-          AppState.hero.title = document.getElementById('f_htitle').value;
+          AppState.hero.eyebrow  = document.getElementById('f_eyebrow').value;
+          AppState.hero.title    = document.getElementById('f_htitle').value;
           AppState.hero.subtitle = document.getElementById('f_hsub').value;
-          document.querySelectorAll('.stat-num-f').forEach((el,i) => { AppState.hero.stats[i].num = el.value; });
-          document.querySelectorAll('.stat-lbl-f').forEach((el,i) => { AppState.hero.stats[i].lbl = el.value; });
+          AppState.hero.stats    = formStats;
+          AppState.departure     = document.getElementById('f_departure').value;
+          AppState.returnDate    = document.getElementById('f_returnDate').value;
           Storage.save();
           Renderer.renderHero();
           UI.closeModal();
+          UI.showToast('Cabeçalho e datas atualizados! 🗓', 'success');
         }},
         { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
       ]
     );
+
+    setTimeout(() => {
+      renderStats();
+      document.getElementById('addStatBtn').addEventListener('click', () => {
+        formStats.push({ num: '0', lbl: 'Nova Stat' });
+        renderStats();
+      });
+    }, 50);
   },
 
   /* ── Edição das Dicas ── */
@@ -1529,6 +1982,118 @@ const AdminPanel = {
         renderDicaList();
       });
     }, 50);
+  },
+
+  /* ── Edição do Checklist ── */
+  openChecklistModal() {
+    // Trabalha sobre cópia dos grupos
+    let formGroups = JSON.parse(JSON.stringify(Checklist.GROUPS));
+
+    const renderGroups = () => {
+      const c = document.getElementById('checklistFormGroups');
+      if (!c) return;
+      c.innerHTML = formGroups.map((g, gi) => `
+        <div class="checklist-edit-group" style="margin-bottom:18px;background:var(--card-bg,#fff);border-radius:12px;padding:14px;border:1px solid #e0d9f0">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <input class="form-input cl-group-title" data-gi="${gi}" value="${g.title}" style="flex:1;font-weight:700" placeholder="Título do grupo (ex: 📄 Documentação)">
+            <button class="act-remove-btn cl-del-group" data-gi="${gi}" title="Remover grupo">🗑</button>
+          </div>
+          <div class="cl-items-list" id="clItems_${gi}">
+            ${g.items.map((item, ii) => `
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <input class="form-input cl-item-text" data-gi="${gi}" data-ii="${ii}" value="${item.replace(/"/g,'&quot;')}" style="flex:1">
+                <button class="act-remove-btn cl-del-item" data-gi="${gi}" data-ii="${ii}" title="Remover item">✕</button>
+              </div>`).join('')}
+          </div>
+          <button class="add-act-inline-btn cl-add-item" data-gi="${gi}" style="margin-top:6px;font-size:12px">＋ Adicionar Item</button>
+        </div>`).join('');
+
+      // Listeners dos títulos de grupo
+      c.querySelectorAll('.cl-group-title').forEach(el => {
+        el.addEventListener('input', e => {
+          formGroups[parseInt(e.target.dataset.gi)].title = e.target.value;
+        });
+      });
+      // Listeners dos textos de item
+      c.querySelectorAll('.cl-item-text').forEach(el => {
+        el.addEventListener('input', e => {
+          formGroups[parseInt(e.target.dataset.gi)].items[parseInt(e.target.dataset.ii)] = e.target.value;
+        });
+      });
+      // Remover item
+      c.querySelectorAll('.cl-del-item').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const gi = parseInt(e.target.dataset.gi);
+          const ii = parseInt(e.target.dataset.ii);
+          formGroups[gi].items.splice(ii, 1);
+          renderGroups();
+        });
+      });
+      // Remover grupo
+      c.querySelectorAll('.cl-del-group').forEach(btn => {
+        btn.addEventListener('click', e => {
+          formGroups.splice(parseInt(e.target.dataset.gi), 1);
+          renderGroups();
+        });
+      });
+      // Adicionar item
+      c.querySelectorAll('.cl-add-item').forEach(btn => {
+        btn.addEventListener('click', e => {
+          formGroups[parseInt(e.target.dataset.gi)].items.push('Novo item');
+          renderGroups();
+        });
+      });
+    };
+
+    UI.openModal('✅ Editar Checklist Pré-Viagem',
+      `<div id="checklistFormGroups"></div>
+       <button class="add-act-inline-btn" id="addGroupBtn" style="margin-top:14px">＋ Adicionar Grupo</button>`,
+      [
+        { label: '💾 Salvar Checklist', cls: 'tb-btn-primary', action: () => {
+          Checklist.GROUPS = formGroups;
+          AppState.checklistGroups = formGroups;
+          // Resetar estado de checks ao mudar estrutura
+          Checklist._state = {};
+          Checklist.save();
+          Storage.save();
+          Checklist.render();
+          UI.closeModal();
+          UI.showToast('Checklist atualizado! ✅', 'success');
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
+
+    setTimeout(() => {
+      renderGroups();
+      document.getElementById('addGroupBtn').addEventListener('click', () => {
+        formGroups.push({ title: '📋 Novo Grupo', items: ['Novo item'] });
+        renderGroups();
+      });
+    }, 50);
+  },
+
+  /* ── Edição do Rodapé ── */
+  openFooterModal() {
+    const currentText = AppState.footer || '';
+    UI.openModal('📝 Editar Rodapé',
+      `<div class="form-group">
+         <label class="form-label">Texto do rodapé (HTML permitido)</label>
+         <textarea class="form-textarea" id="f_footer" style="min-height:90px">${currentText}</textarea>
+       </div>
+       <p style="font-size:11px;color:#888;margin-top:4px">💡 Use <code>&lt;span class="heart"&gt;💜&lt;/span&gt;</code> para o coração animado.</p>`,
+      [
+        { label: '💾 Salvar Rodapé', cls: 'tb-btn-primary', action: () => {
+          AppState.footer = document.getElementById('f_footer').value;
+          const footerEl = document.getElementById('footerEl');
+          if (footerEl) footerEl.innerHTML = AppState.footer;
+          Storage.save();
+          UI.closeModal();
+          UI.showToast('Rodapé atualizado! 📝', 'success');
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
   },
 
   /* ── Busca em tempo real ── */
@@ -1633,141 +2198,936 @@ const UI = {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   MÓDULO 7: GeoWeather — Clima e localização por cidade
-   Usa Open-Meteo (gratuito, sem API key) para temperatura real.
-   O Google Maps Embed é carregado via iframe sem necessidade de chave.
+   MÓDULO 7: GeoWeather — Clima inteligente + Leaflet
+   • Clima histórico de outubro (Open-Meteo /climate) quando
+     a viagem ainda está longe
+   • Previsão real (Open-Meteo /forecast, 7 dias) quando perto
+   • Widget reformulado: períodos do dia + % chuva + previsão 7d
+   • Mapa Leaflet.js compartilhado no canto da tela
 ══════════════════════════════════════════════════════════════ */
 const GeoWeather = {
 
-  /* Mapa de cidades mencionadas no roteiro → coordenadas e label */
   CITIES: {
-    // Padrão fallback
-    default:       { lat: 35.6762, lon: 139.6503, name: 'Japão',          mapQuery: 'Japan' },
-    // Tóquio e bairros
-    shinjuku:      { lat: 35.6938, lon: 139.7034, name: 'Shinjuku',       mapQuery: 'Shinjuku, Tokyo, Japan' },
-    akihabara:     { lat: 35.7021, lon: 139.7744, name: 'Akihabara',      mapQuery: 'Akihabara, Tokyo, Japan' },
-    sumida:        { lat: 35.7101, lon: 139.8107, name: 'Sumida',         mapQuery: 'Tokyo Skytree, Sumida, Japan' },
-    asakusa:       { lat: 35.7148, lon: 139.7967, name: 'Asakusa',        mapQuery: 'Senso-ji, Asakusa, Tokyo, Japan' },
-    odaiba:        { lat: 35.6267, lon: 139.7756, name: 'Odaiba',         mapQuery: 'Odaiba, Tokyo, Japan' },
-    harajuku:      { lat: 35.6702, lon: 139.7027, name: 'Harajuku',       mapQuery: 'Harajuku, Tokyo, Japan' },
-    shibuya:       { lat: 35.6581, lon: 139.7014, name: 'Shibuya',        mapQuery: 'Shibuya Crossing, Tokyo, Japan' },
-    toyosu:        { lat: 35.6441, lon: 139.7954, name: 'Toyosu',         mapQuery: 'TeamLab Planets, Toyosu, Tokyo, Japan' },
-    ginza:         { lat: 35.6714, lon: 139.7659, name: 'Ginza',          mapQuery: 'Ginza, Tokyo, Japan' },
-    urayasu:       { lat: 35.6327, lon: 139.8800, name: 'Tokyo DisneySea', mapQuery: 'Tokyo DisneySea, Urayasu, Japan' },
-    tóquio:        { lat: 35.6762, lon: 139.6503, name: 'Tóquio',         mapQuery: 'Tokyo, Japan' },
-    // Hakone
-    hakone:        { lat: 35.2323, lon: 139.1069, name: 'Hakone',         mapQuery: 'Hakone, Kanagawa, Japan' },
-    // Alpes japoneses
-    takayama:      { lat: 36.1408, lon: 137.2524, name: 'Takayama',       mapQuery: 'Takayama, Gifu, Japan' },
-    'shirakawa-go':{ lat: 36.2573, lon: 136.9065, name: 'Shirakawa-go',   mapQuery: 'Shirakawa-go, Japan' },
-    shirakawa:     { lat: 36.2573, lon: 136.9065, name: 'Shirakawa-go',   mapQuery: 'Shirakawa-go, Japan' },
-    // Quioto
-    fushimi:       { lat: 34.9671, lon: 135.7727, name: 'Fushimi Inari',  mapQuery: 'Fushimi Inari Taisha, Kyoto, Japan' },
-    'kinkaku / gion':{ lat: 35.0394, lon: 135.7292, name: 'Kinkaku-ji',   mapQuery: 'Kinkaku-ji, Kyoto, Japan' },
-    kinkaku:       { lat: 35.0394, lon: 135.7292, name: 'Kinkaku-ji',     mapQuery: 'Kinkaku-ji, Kyoto, Japan' },
-    arashiyama:    { lat: 35.0094, lon: 135.6761, name: 'Arashiyama',     mapQuery: 'Arashiyama Bamboo Grove, Kyoto, Japan' },
-    quioto:        { lat: 35.0116, lon: 135.7681, name: 'Quioto',         mapQuery: 'Kyoto, Japan' },
-    kyoto:         { lat: 35.0116, lon: 135.7681, name: 'Quioto',         mapQuery: 'Kyoto, Japan' },
-    nara:          { lat: 34.6851, lon: 135.8048, name: 'Nara',           mapQuery: 'Nara Park, Nara, Japan' },
-    // Osaka
-    osaka:         { lat: 34.6937, lon: 135.5023, name: 'Osaka',          mapQuery: 'Osaka, Japan' },
-    dotonbori:     { lat: 34.6689, lon: 135.5024, name: 'Dotonbori',      mapQuery: 'Dotonbori, Osaka, Japan' },
-    'osaka – usj': { lat: 34.6654, lon: 135.4323, name: 'Universal Studios Japan', mapQuery: 'Universal Studios Japan, Osaka' },
-    himeji:        { lat: 34.8394, lon: 134.6939, name: 'Himeji',         mapQuery: 'Himeji Castle, Japan' },
-    // Hiroshima
-    hiroshima:     { lat: 34.3853, lon: 132.4553, name: 'Hiroshima',      mapQuery: 'Peace Memorial Park, Hiroshima, Japan' },
-    miyajima:      { lat: 34.2957, lon: 132.3195, name: 'Miyajima',       mapQuery: 'Itsukushima Shrine, Miyajima, Japan' },
-    // Aeroporto
-    'narita / haneda': { lat: 35.7647, lon: 140.3863, name: 'Aeroporto de Narita', mapQuery: 'Narita International Airport, Japan' },
+    default:          { lat: 35.6762, lon: 139.6503, name: 'Japão',                 mapQuery: 'Japan' },
+    shinjuku:         { lat: 35.6938, lon: 139.7034, name: 'Shinjuku',              mapQuery: 'Shinjuku, Tokyo, Japan' },
+    akihabara:        { lat: 35.7021, lon: 139.7744, name: 'Akihabara',             mapQuery: 'Akihabara, Tokyo, Japan' },
+    sumida:           { lat: 35.7101, lon: 139.8107, name: 'Sumida',                mapQuery: 'Tokyo Skytree, Sumida, Japan' },
+    asakusa:          { lat: 35.7148, lon: 139.7967, name: 'Asakusa',               mapQuery: 'Senso-ji, Asakusa, Tokyo, Japan' },
+    odaiba:           { lat: 35.6267, lon: 139.7756, name: 'Odaiba',                mapQuery: 'Odaiba, Tokyo, Japan' },
+    harajuku:         { lat: 35.6702, lon: 139.7027, name: 'Harajuku',              mapQuery: 'Harajuku, Tokyo, Japan' },
+    shibuya:          { lat: 35.6581, lon: 139.7014, name: 'Shibuya',               mapQuery: 'Shibuya Crossing, Tokyo, Japan' },
+    toyosu:           { lat: 35.6441, lon: 139.7954, name: 'Toyosu',                mapQuery: 'TeamLab Planets, Toyosu, Tokyo, Japan' },
+    ginza:            { lat: 35.6714, lon: 139.7659, name: 'Ginza',                 mapQuery: 'Ginza, Tokyo, Japan' },
+    urayasu:          { lat: 35.6327, lon: 139.8800, name: 'Tokyo DisneySea',       mapQuery: 'Tokyo DisneySea, Urayasu, Japan' },
+    'tóquio':         { lat: 35.6762, lon: 139.6503, name: 'Tóquio',                mapQuery: 'Tokyo, Japan' },
+    hakone:           { lat: 35.2323, lon: 139.1069, name: 'Hakone',                mapQuery: 'Hakone, Kanagawa, Japan' },
+    takayama:         { lat: 36.1408, lon: 137.2524, name: 'Takayama',              mapQuery: 'Takayama, Gifu, Japan' },
+    'shirakawa-go':   { lat: 36.2573, lon: 136.9065, name: 'Shirakawa-go',          mapQuery: 'Shirakawa-go, Japan' },
+    shirakawa:        { lat: 36.2573, lon: 136.9065, name: 'Shirakawa-go',          mapQuery: 'Shirakawa-go, Japan' },
+    fushimi:          { lat: 34.9671, lon: 135.7727, name: 'Fushimi Inari',         mapQuery: 'Fushimi Inari Taisha, Kyoto, Japan' },
+    'kinkaku / gion': { lat: 35.0394, lon: 135.7292, name: 'Kinkaku-ji',            mapQuery: 'Kinkaku-ji, Kyoto, Japan' },
+    kinkaku:          { lat: 35.0394, lon: 135.7292, name: 'Kinkaku-ji',            mapQuery: 'Kinkaku-ji, Kyoto, Japan' },
+    arashiyama:       { lat: 35.0094, lon: 135.6761, name: 'Arashiyama',            mapQuery: 'Arashiyama Bamboo Grove, Kyoto, Japan' },
+    quioto:           { lat: 35.0116, lon: 135.7681, name: 'Quioto',                mapQuery: 'Kyoto, Japan' },
+    kyoto:            { lat: 35.0116, lon: 135.7681, name: 'Quioto',                mapQuery: 'Kyoto, Japan' },
+    nara:             { lat: 34.6851, lon: 135.8048, name: 'Nara',                  mapQuery: 'Nara Park, Nara, Japan' },
+    osaka:            { lat: 34.6937, lon: 135.5023, name: 'Osaka',                 mapQuery: 'Osaka, Japan' },
+    dotonbori:        { lat: 34.6689, lon: 135.5024, name: 'Dotonbori',             mapQuery: 'Dotonbori, Osaka, Japan' },
+    'osaka – usj':    { lat: 34.6654, lon: 135.4323, name: 'Universal Studios',     mapQuery: 'Universal Studios Japan, Osaka' },
+    himeji:           { lat: 34.8394, lon: 134.6939, name: 'Himeji',                mapQuery: 'Himeji Castle, Japan' },
+    hiroshima:        { lat: 34.3853, lon: 132.4553, name: 'Hiroshima',             mapQuery: 'Peace Memorial Park, Hiroshima, Japan' },
+    miyajima:         { lat: 34.2957, lon: 132.3195, name: 'Miyajima',              mapQuery: 'Itsukushima Shrine, Miyajima, Japan' },
+    'narita / haneda':{ lat: 35.7647, lon: 140.3863, name: 'Narita',               mapQuery: 'Narita International Airport, Japan' },
   },
 
-  /**
-   * Resolve a cidade do dia para coordenadas.
-   * Tenta bater na tabela CITIES por palavra-chave (case-insensitive).
-   */
+  WMO: {
+    0:{icon:'☀️',desc:'Céu limpo'},      1:{icon:'🌤️',desc:'Principalmente limpo'},
+    2:{icon:'⛅',desc:'Parcialmente nublado'}, 3:{icon:'☁️',desc:'Nublado'},
+    45:{icon:'🌫️',desc:'Névoa'},         48:{icon:'🌫️',desc:'Névoa com gelo'},
+    51:{icon:'🌦️',desc:'Garoa leve'},    53:{icon:'🌦️',desc:'Garoa'},
+    55:{icon:'🌧️',desc:'Garoa intensa'}, 61:{icon:'🌧️',desc:'Chuva leve'},
+    63:{icon:'🌧️',desc:'Chuva'},         65:{icon:'🌧️',desc:'Chuva forte'},
+    71:{icon:'❄️',desc:'Neve leve'},     73:{icon:'❄️',desc:'Neve'},
+    75:{icon:'❄️',desc:'Neve intensa'},  80:{icon:'🌦️',desc:'Pancadas leves'},
+    81:{icon:'🌧️',desc:'Pancadas'},      82:{icon:'⛈️',desc:'Pancadas fortes'},
+    95:{icon:'⛈️',desc:'Trovoada'},      99:{icon:'⛈️',desc:'Trovoada c/ granizo'},
+  },
+
+  // Período horário → índice no array hourly (hora Tokyo)
+  PERIODS: [
+    { label:'Manhã',  icon:'🌅', hour: 8  },
+    { label:'Tarde',  icon:'☀️', hour: 14 },
+    { label:'Noite',  icon:'🌙', hour: 20 },
+  ],
+
+  _cache: {},
+
   resolveCity(cityStr) {
     const key = cityStr.toLowerCase().trim();
-    // Tentativa exata
     if(this.CITIES[key]) return this.CITIES[key];
-    // Busca por substring em qualquer parte
     for(const [k, v] of Object.entries(this.CITIES)) {
-      if(k !== 'default' && (key.includes(k) || k.includes(key.split(/[\/,&]/)[0].trim()))) {
-        return v;
-      }
+      if(k !== 'default' && (key.includes(k) || k.includes(key.split(/[\/,&]/)[0].trim()))) return v;
     }
     return this.CITIES.default;
   },
 
-  /* Códigos WMO de clima → emoji + descrição */
-  WMO: {
-    0:  {icon:'☀️', desc:'Céu limpo'},
-    1:  {icon:'🌤️', desc:'Principalmente limpo'},
-    2:  {icon:'⛅', desc:'Parcialmente nublado'},
-    3:  {icon:'☁️', desc:'Nublado'},
-    45: {icon:'🌫️', desc:'Névoa'},
-    48: {icon:'🌫️', desc:'Névoa com gelo'},
-    51: {icon:'🌦️', desc:'Garoa leve'},
-    53: {icon:'🌦️', desc:'Garoa moderada'},
-    55: {icon:'🌧️', desc:'Garoa intensa'},
-    61: {icon:'🌧️', desc:'Chuva leve'},
-    63: {icon:'🌧️', desc:'Chuva moderada'},
-    65: {icon:'🌧️', desc:'Chuva forte'},
-    71: {icon:'❄️', desc:'Neve leve'},
-    73: {icon:'❄️', desc:'Neve moderada'},
-    75: {icon:'❄️', desc:'Neve intensa'},
-    80: {icon:'🌦️', desc:'Pancadas leves'},
-    81: {icon:'🌧️', desc:'Pancadas moderadas'},
-    82: {icon:'⛈️', desc:'Pancadas fortes'},
-    95: {icon:'⛈️', desc:'Trovoada'},
-    99: {icon:'⛈️', desc:'Trovoada com granizo'},
+  /* ─── Decide: histórico ou previsão real? ─── */
+  _useRealForecast() {
+    const departure = new Date('2026-10-13T00:00:00');
+    const diffDays  = (departure - new Date()) / 86400000;
+    return diffDays <= 7; // previsão real só nos últimos 7 dias
   },
 
-  /** Cache em memória para evitar múltiplas requisições para a mesma coord */
-  _cache: {},
+  /* ─── Busca dados históricos de outubro (Open-Meteo /climate) ─── */
+  async _fetchHistorical(lat, lon) {
+    const url = `https://climate-api.open-meteo.com/v1/climate`
+      + `?latitude=${lat}&longitude=${lon}`
+      + `&start_date=1994-10-13&end_date=2023-10-25`
+      + `&models=ERA5`
+      + `&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum`
+      + `&timezone=Asia/Tokyo`;
+    const res  = await fetch(url);
+    if(!res.ok) throw new Error('climate ' + res.status);
+    const data = await res.json();
+    // Médias 30 anos
+    const avg = arr => arr.reduce((a,b) => a + (b||0), 0) / arr.filter(v => v != null).length;
+    return {
+      type:      'historico',
+      tempMean:  Math.round(avg(data.daily.temperature_2m_mean)),
+      tempMax:   Math.round(avg(data.daily.temperature_2m_max)),
+      tempMin:   Math.round(avg(data.daily.temperature_2m_min)),
+      rainDays:  data.daily.precipitation_sum.filter(v => v > 1).length,
+      totalDays: data.daily.precipitation_sum.filter(v => v != null).length,
+    };
+  },
 
-  /**
-   * Busca clima atual via Open-Meteo e renderiza no widget.
-   * @param {HTMLElement} widget - .weather-widget com data-lat, data-lon, data-city
-   */
+  /* ─── Busca previsão real 7 dias ─── */
+  async _fetchForecast(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast`
+      + `?latitude=${lat}&longitude=${lon}`
+      + `&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,precipitation_probability`
+      + `&hourly=temperature_2m,weathercode`
+      + `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max`
+      + `&timezone=Asia/Tokyo&forecast_days=7`;
+    const res  = await fetch(url);
+    if(!res.ok) throw new Error('forecast ' + res.status);
+    const data = await res.json();
+    return { type: 'previsao', ...data };
+  },
+
+  /* ─── Renderiza widget com dados históricos ─── */
+  _renderHistorical(widget, d, city) {
+    const rainPct = Math.round(d.rainDays / d.totalDays * 100);
+    const wmo     = { icon: rainPct > 40 ? '🌧️' : rainPct > 20 ? '⛅' : '☀️' };
+    widget.innerHTML = `
+      <div class="weather-top">
+        <div class="weather-icon">${wmo.icon}</div>
+        <div class="weather-main">
+          <div class="weather-temp">${d.tempMean}<sup>°C</sup></div>
+          <div class="weather-desc">Média histórica outubro</div>
+          <div class="weather-source">${city} <span class="weather-badge badge-historico">30 anos</span></div>
+        </div>
+      </div>
+      <div class="weather-periods">
+        <div class="weather-period"><div class="wp-label">Mín</div><div class="wp-icon">🌙</div><div class="wp-temp">${d.tempMin}°</div></div>
+        <div class="weather-period"><div class="wp-label">Média</div><div class="wp-icon">🌤️</div><div class="wp-temp">${d.tempMean}°</div></div>
+        <div class="weather-period"><div class="wp-label">Máx</div><div class="wp-icon">☀️</div><div class="wp-temp">${d.tempMax}°</div></div>
+      </div>
+      <div class="weather-rain-row">
+        <span class="rain-label">☂️ Dias c/ chuva</span>
+        <div class="rain-bar-wrap"><div class="rain-bar-fill" style="width:${rainPct}%"></div></div>
+        <span class="rain-pct">${rainPct}%</span>
+      </div>`;
+  },
+
+  /* ─── Renderiza widget com previsão real ─── */
+  _renderForecast(widget, d, city) {
+    const cur    = d.current;
+    const daily  = d.daily;
+    const hourly = d.hourly;
+    const wmo    = this.WMO[cur.weathercode] || {icon:'🌡️', desc:'—'};
+    const temp   = Math.round(cur.temperature_2m);
+    const feels  = Math.round(cur.apparent_temperature);
+    const wind   = Math.round(cur.windspeed_10m);
+    const rainP  = cur.precipitation_probability || 0;
+
+    // Períodos do dia (busca hora no array hourly)
+    const now     = new Date();
+    const todayBase = now.toISOString().slice(0,10); // "2025-10-13"
+    const periodsHtml = this.PERIODS.map(p => {
+      const targetHour = `${todayBase}T${String(p.hour).padStart(2,'0')}:00`;
+      const idx = (hourly.time || []).findIndex(t => t === targetHour);
+      const t   = idx >= 0 ? Math.round(hourly.temperature_2m[idx]) : '—';
+      const w   = idx >= 0 ? (this.WMO[hourly.weathercode[idx]] || wmo) : wmo;
+      return `<div class="weather-period">
+        <div class="wp-label">${p.label}</div>
+        <div class="wp-icon">${w.icon}</div>
+        <div class="wp-temp">${t}°</div>
+      </div>`;
+    }).join('');
+
+    // Previsão 7 dias
+    const days   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const forecastHtml = (daily.time || []).map((dateStr, i) => {
+      const d   = new Date(dateStr + 'T12:00:00');
+      const lbl = i === 0 ? 'Hoje' : days[d.getDay()];
+      const max = Math.round(daily.temperature_2m_max[i]);
+      const min = Math.round(daily.temperature_2m_min[i]);
+      const w   = this.WMO[daily.weathercode[i]] || wmo;
+      const cls = i === 0 ? 'forecast-chip today' : 'forecast-chip';
+      return `<div class="${cls}">
+        <div class="fc-day">${lbl}</div>
+        <div class="fc-icon">${w.icon}</div>
+        <div class="fc-temp">${max}°</div>
+        <div class="fc-range">${min}°</div>
+      </div>`;
+    }).join('');
+
+    widget.innerHTML = `
+      <div class="weather-top">
+        <div class="weather-icon">${wmo.icon}</div>
+        <div class="weather-main">
+          <div class="weather-temp">${temp}<sup>°C</sup></div>
+          <div class="weather-desc">${wmo.desc} · Sensação ${feels}°</div>
+          <div class="weather-source">${city} · 🌬️ ${wind} km/h <span class="weather-badge badge-previsao">Ao vivo</span></div>
+        </div>
+      </div>
+      <div class="weather-periods">${periodsHtml}</div>
+      <div class="weather-rain-row">
+        <span class="rain-label">☂️ Chuva hoje</span>
+        <div class="rain-bar-wrap"><div class="rain-bar-fill" style="width:${rainP}%"></div></div>
+        <span class="rain-pct">${rainP}%</span>
+      </div>
+      <div class="weather-forecast">${forecastHtml}</div>`;
+  },
+
+  /* ─── Entry point: decide modo e renderiza ─── */
   async fetchAndRender(widget) {
-    const lat  = widget.dataset.lat;
-    const lon  = widget.dataset.lon;
-    const city = widget.dataset.city;
+    const lat      = widget.dataset.lat;
+    const lon      = widget.dataset.lon;
+    const city     = widget.dataset.city;
     const cacheKey = `${lat},${lon}`;
+
+    widget.innerHTML = `<div class="weather-loading">🌡️ Carregando clima…</div>`;
 
     try {
       let data;
       if(this._cache[cacheKey]) {
         data = this._cache[cacheKey];
       } else {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-          + `&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m`
-          + `&daily=temperature_2m_max,temperature_2m_min`
-          + `&timezone=Asia/Tokyo&forecast_days=1`;
-        const res = await fetch(url);
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        data = await res.json();
+        data = this._useRealForecast()
+          ? await this._fetchForecast(lat, lon)
+          : await this._fetchHistorical(lat, lon);
         this._cache[cacheKey] = data;
       }
 
-      const cur   = data.current;
-      const daily = data.daily;
-      const temp  = Math.round(cur.temperature_2m);
-      const feels = Math.round(cur.apparent_temperature);
-      const tMax  = Math.round(daily.temperature_2m_max[0]);
-      const tMin  = Math.round(daily.temperature_2m_min[0]);
-      const wmo   = this.WMO[cur.weathercode] || {icon:'🌡️', desc:'—'};
-
-      widget.querySelector('.weather-icon').textContent = wmo.icon;
-      widget.querySelector('.weather-info').innerHTML = `
-        <div class="weather-temp">${temp}<sup>°C</sup></div>
-        <div class="weather-desc">${wmo.desc} · Sensação ${feels}°C</div>
-        <div class="weather-range">↑ ${tMax}° / ↓ ${tMin}° · ${city}</div>`;
+      if(data.type === 'historico') this._renderHistorical(widget, data, city);
+      else                          this._renderForecast(widget, data, city);
 
     } catch(err) {
-      widget.querySelector('.weather-info').innerHTML =
-        `<div class="weather-error">Clima indisponível no momento</div>`;
+      console.warn('GeoWeather error:', err);
+      widget.innerHTML = `<div class="weather-error">⚠️ Clima indisponível</div>`;
     }
+  },
+
+  /* ══════════════════════════════════════════
+     MAPA LEAFLET — instância única compartilhada
+  ══════════════════════════════════════════ */
+  _leafletLoaded: false,
+  _map: null,
+  _marker: null,
+
+  /* Carrega Leaflet via CDN uma única vez */
+  async _ensureLeaflet() {
+    if(this._leafletLoaded) return;
+    await new Promise((res, rej) => {
+      // CSS
+      if(!document.querySelector('#leaflet-css')) {
+        const link = document.createElement('link');
+        link.id    = 'leaflet-css';
+        link.rel   = 'stylesheet';
+        link.href  = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+      // JS
+      const s  = document.createElement('script');
+      s.src    = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+    this._leafletLoaded = true;
+  },
+
+  /* Inicializa o mapa fixo no canto */
+  async initStickyMap() {
+    await this._ensureLeaflet();
+    const L   = window.L;
+    this._map = L.map('sticky-map', { zoomControl: false, attributionControl: false })
+                 .setView([36.5, 138.0], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18, opacity: 0.92,
+    }).addTo(this._map);
+
+    // Zoom suave no controle
+    L.control.zoom({ position: 'topright' }).addTo(this._map);
+
+    // Marker personalizado roxo
+    const icon = L.divIcon({
+      html: `<div style="
+        width:28px;height:28px;border-radius:50% 50% 50% 0;
+        background:#a390e4;border:3px solid #fff;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+        transform:rotate(-45deg);
+      "></div>`,
+      iconSize: [28,28], iconAnchor: [14,28], className: ''
+    });
+
+    this._marker = L.marker([35.6762, 139.6503], { icon }).addTo(this._map);
+
+    // Botão fechar
+    document.getElementById('sticky-map-close').addEventListener('click', () => {
+      document.getElementById('sticky-map-wrap').classList.remove('visible');
+    });
+  },
+
+  /* Voa para uma cidade e mostra o mapa fixo */
+  flyTo(cityStr, label) {
+    const geo  = this.resolveCity(cityStr);
+    const wrap = document.getElementById('sticky-map-wrap');
+    const lbl  = document.getElementById('sticky-map-city');
+
+    if(!this._map) { this.initStickyMap().then(() => this.flyTo(cityStr, label)); return; }
+
+    wrap.classList.add('visible');
+    if(lbl) lbl.textContent = `📍 ${label || geo.name}`;
+    this._map.flyTo([geo.lat, geo.lon], 13, { animate: true, duration: 1.2 });
+    this._marker.setLatLng([geo.lat, geo.lon]);
+    // Fix: Leaflet precisa saber que o container foi exibido
+    setTimeout(() => this._map.invalidateSize(), 350);
+  },
+
+  /* Mini mapa inline em cada card (Leaflet, substituí iframe) */
+  async initCardMap(container, lat, lon, mapsUrl) {
+    await this._ensureLeaflet();
+    const L    = window.L;
+    const mapEl = container.querySelector('.map-widget-inner');
+    if(!mapEl) return;
+
+    const m = L.map(mapEl, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false })
+               .setView([lat, lon], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18, opacity: 0.9,
+    }).addTo(m);
+
+    const icon = L.divIcon({
+      html: `<div style="
+        width:22px;height:22px;border-radius:50% 50% 50% 0;
+        background:#a390e4;border:2.5px solid #fff;
+        box-shadow:0 2px 6px rgba(0,0,0,0.3);
+        transform:rotate(-45deg);
+      "></div>`,
+      iconSize: [22,22], iconAnchor: [11,22], className: ''
+    });
+
+    L.marker([lat, lon], { icon }).addTo(m);
+
+    // Clique no mapa ativa dragging e abre em fullscreen (sticky map)
+    mapEl.addEventListener('click', () => {
+      const cityLabel = container.closest('.day-card')?.querySelector('.card-city')?.textContent?.replace('📍','').trim();
+      this.flyTo(`${lat},${lon}`, cityLabel);
+    });
+
+    // Garante render correto após o card abrir (transition)
+    setTimeout(() => m.invalidateSize(), 400);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURE: CONTADOR REGRESSIVO
+══════════════════════════════════════════════════════════════ */
+const Countdown = {
+  _timer: null,
+  _prev: {},
+
+  get DEPARTURE() { return new Date((AppState?.departure  || '2026-10-13') + 'T00:00:00'); },
+  get RETURN()    { return new Date((AppState?.returnDate || '2026-11-05') + 'T23:59:59'); },
+
+  init() {
+    this._prev = {};
+    this.render();
+    clearInterval(this._timer);
+    this._timer = setInterval(() => this.render(), 1000);
+  },
+
+  _unit(v, lbl) {
+    return `<div class="countdown-unit">
+      <span class="countdown-num" data-key="${lbl}">${String(v).padStart(2,'0')}</span>
+      <span class="countdown-sub">${lbl}</span>
+    </div>`;
+  },
+
+  _sep() { return '<span class="countdown-sep">:</span>'; },
+
+  render() {
+    const bar   = document.getElementById('countdownBar');
+    const units = document.getElementById('countdownUnits');
+    if (!bar || !units) return;
+
+    const now  = new Date();
+    const dept = this.DEPARTURE;
+    const ret  = this.RETURN;
+
+    /* ── Já voltou ── */
+    if (now > ret) {
+      bar.querySelector('.countdown-label').innerHTML = '🌸 &nbsp;Memórias para sempre';
+      units.innerHTML = `<span class="countdown-ended">Japão eternamente no coração 💜</span>`;
+      clearInterval(this._timer);
+      return;
+    }
+
+    /* ── Durante a viagem ── */
+    if (now >= dept && now <= ret) {
+      const diff = ret - now;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000)  / 60000);
+      const s = Math.floor((diff % 60000)    / 1000);
+      bar.querySelector('.countdown-label').innerHTML = '🎉 &nbsp;Vocês estão no Japão!';
+      units.innerHTML =
+        `<div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <span class="countdown-viagem">✈️ Fim da aventura em</span>
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            ${this._unit(d,'dias')}${this._sep()}${this._unit(h,'horas')}${this._sep()}${this._unit(m,'min')}${this._sep()}${this._unit(s,'seg')}
+          </div>
+        </div>`;
+      this._animateChanged({ dias: d, horas: h, min: m, seg: s });
+      return;
+    }
+
+    /* ── Antes da viagem ── */
+    const diff = dept - now;
+    const d  = Math.floor(diff / 86400000);
+    const h  = Math.floor((diff % 86400000) / 3600000);
+    const m  = Math.floor((diff % 3600000)  / 60000);
+    const s  = Math.floor((diff % 60000)    / 1000);
+
+    bar.querySelector('.countdown-label').innerHTML = '✈️ &nbsp;Embarque em';
+
+    const newHtml = `${this._unit(d,'dias')}${this._sep()}${this._unit(h,'horas')}${this._sep()}${this._unit(m,'min')}${this._sep()}${this._unit(s,'seg')}`;
+    if (units.children.length === 0) {
+      units.innerHTML = newHtml;
+    } else {
+      // Só atualiza texto sem re-renderizar inteiro (evita flash)
+      const map = { dias: d, horas: h, min: m, seg: s };
+      units.querySelectorAll('.countdown-num').forEach(el => {
+        const key = el.dataset.key;
+        const val = String(map[key]).padStart(2,'0');
+        if (el.textContent !== val) {
+          el.classList.add('flip');
+          setTimeout(() => { el.textContent = val; el.classList.remove('flip'); }, 150);
+        }
+      });
+      // Se estrutura não existe ainda, monta
+      if (!units.querySelector('.countdown-num[data-key="dias"]')) units.innerHTML = newHtml;
+    }
+    this._prev = { dias: d, horas: h, min: m, seg: s };
+  },
+
+  _animateChanged(map) {
+    const bar = document.getElementById('countdownBar');
+    if (!bar) return;
+    bar.querySelectorAll('.countdown-num').forEach(el => {
+      const key = el.dataset.key;
+      const val = String(map[key]).padStart(2,'0');
+      if (el.textContent !== val) {
+        el.classList.add('flip');
+        setTimeout(() => { el.textContent = val; el.classList.remove('flip'); }, 150);
+      }
+    });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURE: CONVERSOR BRL → JPY
+══════════════════════════════════════════════════════════════ */
+const Converter = {
+  rate: null,   // JPY por 1 BRL
+  _fetched: false,
+
+  async fetchRate() {
+    if (this._fetched && this.rate) return;
+    this._fetched = true;
+    const el = document.getElementById('convRate');
+    if (el) el.textContent = 'Buscando cotação…';
+
+    // Tenta múltiplas APIs em sequência até conseguir
+    const APIS = [
+      async () => {
+        const r = await fetch('https://economia.awesomeapi.com.br/json/last/BRL-JPY');
+        const d = await r.json();
+        return parseFloat(d['BRLJPY']?.bid);
+      },
+      async () => {
+        const r = await fetch('https://open.er-api.com/v6/latest/BRL');
+        const d = await r.json();
+        return d.rates?.JPY;
+      },
+      async () => {
+        const r = await fetch('https://api.frankfurter.app/latest?from=BRL&to=JPY');
+        const d = await r.json();
+        return d.rates?.JPY;
+      },
+    ];
+
+    for (const apiFn of APIS) {
+      try {
+        const rate = await apiFn();
+        if (rate && !isNaN(rate) && rate > 0) {
+          this.rate = rate;
+          if (el) {
+            el.textContent = `1 BRL = ¥${this.rate.toFixed(2)} · atualizado agora`;
+            el.style.color = '#6b8f5e';
+          }
+          this.updateFromBRL();
+          return;
+        }
+      } catch { /* tenta próxima */ }
+    }
+
+    // Todas falharam
+    if (el) {
+      el.innerHTML = `Cotação indisponível · <a href="#" onclick="Converter._fetched=false;Converter.fetchRate();return false;" style="color:var(--lilac-dark)">Tentar novamente</a>`;
+    }
+  },
+
+  updateFromBRL() {
+    const brl = parseFloat(document.getElementById('convBrl')?.value) || 0;
+    const jpy = this.rate ? (brl * this.rate) : 0;
+    const resultEl = document.getElementById('convResult');
+    const jpyEl    = document.getElementById('convJpy');
+    if (resultEl) resultEl.textContent = this.rate
+      ? `¥ ${Math.round(jpy).toLocaleString('pt-BR')}`
+      : '— ¥ (cotação indisponível)';
+    if (jpyEl) jpyEl.value = this.rate ? Math.round(jpy) : '';
+  },
+
+  updateFromJPY() {
+    const jpy = parseFloat(document.getElementById('convJpy')?.value) || 0;
+    const brl = this.rate ? (jpy / this.rate) : 0;
+    const resultEl = document.getElementById('convResult');
+    const brlEl    = document.getElementById('convBrl');
+    if (resultEl) resultEl.textContent = this.rate
+      ? `R$ ${brl.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}`
+      : '— R$';
+    if (brlEl) brlEl.value = this.rate ? brl.toFixed(2) : '';
+  },
+
+  toggle() {
+    const panel = document.getElementById('converterPanel');
+    if (!panel) return;
+    const isOpen = panel.classList.toggle('open');
+    if (isOpen) {
+      this.fetchRate();
+      setTimeout(() => document.getElementById('convBrl')?.focus(), 50);
+    }
+  },
+
+  initEvents() {
+    document.getElementById('convBrl')?.addEventListener('input', () => this.updateFromBRL());
+    document.getElementById('convJpy')?.addEventListener('input', () => this.updateFromJPY());
+    // Fechar ao clicar fora
+    document.addEventListener('click', e => {
+      const panel = document.getElementById('converterPanel');
+      const btn   = document.getElementById('fabConverter');
+      if (panel?.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) {
+        panel.classList.remove('open');
+      }
+    });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURE: COMPARTILHAR ROTEIRO
+══════════════════════════════════════════════════════════════ */
+const ShareTool = {
+  async share() {
+    const title = document.querySelector('.hero h1')?.textContent || 'Lua de Mel no Japão';
+    const text  = 'Nosso roteiro completo de lua de mel pelo Japão 🌸';
+    const url   = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    // Fallback: copiar URL
+    try {
+      await navigator.clipboard.writeText(url);
+      UI.showToast('🔗 Link copiado para a área de transferência!', 'success');
+    } catch {
+      prompt('Copie o link abaixo:', url);
+    }
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURE: MAPA SVG DA ROTA COMPLETA
+   Contorno do Japão em SVG com pins nas coordenadas reais,
+   linha de rota animada e clique que rola até a seção.
+══════════════════════════════════════════════════════════════ */
+const RouteMap = {
+  // Coordenadas geográficas reais → convertidas para o SVG viewBox
+  // viewBox: 0 0 400 560 (Japão de ~30°N a ~45°N, 130°E a 145°E)
+  GEO_BOUNDS: { latMin: 30, latMax: 46, lonMin: 129, lonMax: 146 },
+  SVG_W: 400, SVG_H: 560,
+
+  ROUTE: [
+    { name: 'Tóquio',       emoji: '🗼', color: '#a390e4', sectionId: 'tokyo',    lat: 35.68, lon: 139.69 },
+    { name: 'Hakone',       emoji: '🗻', color: '#82b596', sectionId: 'hakone',   lat: 35.23, lon: 139.10 },
+    { name: 'Takayama',     emoji: '🏯', color: '#f0a070', sectionId: 'alpino',   lat: 36.14, lon: 137.25 },
+    { name: 'Shirakawa-go', emoji: '🏘️', color: '#e8c44d', sectionId: 'alpino',   lat: 36.25, lon: 136.90 },
+    { name: 'Quioto',       emoji: '⛩️', color: '#e07070', sectionId: 'kyoto',    lat: 35.01, lon: 135.76 },
+    { name: 'Nara',         emoji: '🦌', color: '#70b0e0', sectionId: 'kyoto',    lat: 34.68, lon: 135.80 },
+    { name: 'Osaka',        emoji: '🎡', color: '#d070c0', sectionId: 'osaka',    lat: 34.69, lon: 135.50 },
+    { name: 'Hiroshima',    emoji: '☮️', color: '#70d0c0', sectionId: 'hiroshima',lat: 34.39, lon: 132.46 },
+    { name: 'Miyajima',     emoji: '🌅', color: '#8ec870', sectionId: 'hiroshima',lat: 34.30, lon: 132.32 },
+  ],
+
+  // Contorno simplificado do Japão (ilhas principais) em coordenadas geo
+  // Honshu + Kyushu + Shikoku — pontos chave para um outline reconhecível
+  JAPAN_OUTLINE: [
+    // Honshu norte → sul (costa pacífico)
+    [141.4,41.5],[141.0,40.5],[141.8,39.5],[141.5,38.3],[141.0,37.0],
+    [140.9,36.0],[140.7,35.5],[140.0,35.0],[139.8,34.8],[137.0,34.7],
+    [136.0,34.5],[135.2,34.0],[134.5,33.8],[133.5,33.5],[132.0,33.3],
+    [131.0,33.5],[130.5,33.9],[130.0,34.0],
+    // Kyushu
+    [130.0,33.0],[130.5,32.5],[130.0,31.8],[131.0,31.5],[131.5,32.0],
+    [131.8,33.0],[132.0,33.3],
+    // Shikoku
+    [132.5,33.5],[133.0,33.7],[133.5,34.0],[134.5,34.3],[135.0,34.0],
+    // Honshu costa interna (Mar do Japão)
+    [135.0,34.0],[135.5,35.5],[136.0,36.0],[136.5,37.0],[137.5,37.5],
+    [138.0,38.5],[139.5,39.5],[140.0,40.0],[140.5,41.0],[141.4,41.5],
+    // Hokkaido (ilha separada)
+  ],
+
+  // Converte lat/lon → x,y no SVG
+  project(lat, lon) {
+    const b = this.GEO_BOUNDS;
+    const x = ((lon - b.lonMin) / (b.lonMax - b.lonMin)) * this.SVG_W;
+    const y = ((b.latMax - lat) / (b.latMax - b.latMin)) * this.SVG_H;
+    return { x: Math.round(x), y: Math.round(y) };
+  },
+
+  render() {
+    const wrap = document.getElementById('routeMapWrap');
+    if(!wrap) return;
+
+    // Projeta cidades
+    const cities = this.ROUTE.map(c => ({
+      ...c, ...this.project(c.lat, c.lon)
+    }));
+
+    // Linha da rota (polyline entre cidades)
+    const routePoints = cities.map(c => `${c.x},${c.y}`).join(' ');
+
+    // Contorno do Japão
+    const outlinePoints = this.JAPAN_OUTLINE.map(([lon, lat]) => {
+      const p = this.project(lat, lon);
+      return `${p.x},${p.y}`;
+    }).join(' ');
+
+    // Hokkaido separado
+    const hokkaidoRaw = [[141.4,41.5],[142.0,42.5],[143.0,43.5],[143.5,44.3],[144.5,44.8],[145.5,43.5],[145.0,42.0],[143.8,42.0],[142.5,41.5],[141.4,41.5]];
+    const hokkaidoPoints = hokkaidoRaw.map(([lon, lat]) => {
+      const p = this.project(lat, lon);
+      return `${p.x},${p.y}`;
+    }).join(' ');
+
+    // Pins SVG para cada cidade
+    const pinsHtml = cities.map((c, i) => {
+      const r  = 10;
+      const delay = i * 0.15;
+      return `
+        <g class="route-pin" data-section="${c.sectionId}" style="cursor:pointer;animation:pinDrop 0.4s ${delay}s both ease-out" onclick="RouteMap.scrollTo('${c.sectionId}')">
+          <circle cx="${c.x}" cy="${c.y}" r="${r+4}" fill="${c.color}" opacity="0.18"/>
+          <circle cx="${c.x}" cy="${c.y}" r="${r}" fill="${c.color}" stroke="white" stroke-width="2.5"/>
+          <text x="${c.x}" y="${c.y+1}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="white" font-weight="800">${i+1}</text>
+          <text x="${c.x + r + 5}" y="${c.y}" dominant-baseline="middle" font-size="11" fill="#3d3d4e" font-weight="700">${c.emoji} ${c.name}</text>
+        </g>`;
+    }).join('');
+
+    // Comprimento da polyline para animação (estimado)
+    const totalLen = cities.reduce((acc, c, i) => {
+      if(i === 0) return 0;
+      const prev = cities[i-1];
+      return acc + Math.hypot(c.x - prev.x, c.y - prev.y);
+    }, 0);
+
+    wrap.innerHTML = `
+      <svg viewBox="0 0 ${this.SVG_W} ${this.SVG_H}" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%;height:auto;max-height:520px;display:block;">
+        <defs>
+          <style>
+            @keyframes drawRoute {
+              from { stroke-dashoffset: ${Math.ceil(totalLen)}; }
+              to   { stroke-dashoffset: 0; }
+            }
+            @keyframes pinDrop {
+              from { opacity:0; transform:scale(0.4); }
+              to   { opacity:1; transform:scale(1); }
+            }
+            .route-pin:hover circle:nth-child(2) { r: 13; }
+            .route-pin text:last-child { transition: font-weight 0.2s; }
+            .route-pin:hover text:last-child { font-weight: 900; fill: #a390e4; }
+          </style>
+        </defs>
+
+        <!-- Fundo suave do oceano -->
+        <rect width="${this.SVG_W}" height="${this.SVG_H}" fill="#e8f4f8" rx="0"/>
+
+        <!-- Ilhas principais -->
+        <polygon points="${outlinePoints}" fill="#f0ede8" stroke="#c8c0d8" stroke-width="1.5" stroke-linejoin="round"/>
+        <polygon points="${hokkaidoPoints}" fill="#f0ede8" stroke="#c8c0d8" stroke-width="1.5" stroke-linejoin="round"/>
+
+        <!-- Linha de rota animada -->
+        <polyline
+          points="${routePoints}"
+          fill="none" stroke="#a390e4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="${Math.ceil(totalLen)}" stroke-dashoffset="${Math.ceil(totalLen)}"
+          style="animation: drawRoute 2.2s 0.3s ease-in-out forwards; opacity: 0.8"
+        />
+
+        <!-- Pins das cidades -->
+        ${pinsHtml}
+      </svg>`;
+
+    // Badges abaixo do mapa
+    const container = document.getElementById('routeCities');
+    if(container) {
+      container.innerHTML = this.ROUTE.map((c, i) =>
+        `<div class="route-city-badge" style="cursor:pointer" onclick="RouteMap.scrollTo('${c.sectionId}')">
+          <div class="dot" style="background:${c.color}"></div>
+          <span style="font-size:10px;color:#888;font-weight:800;">${i+1}</span>
+          ${c.emoji} ${c.name}
+        </div>`
+      ).join('');
+    }
+  },
+
+  // Rola suavemente até a seção da cidade
+  scrollTo(sectionId) {
+    const el = document.querySelector(`.tl-section[data-sec="${sectionId}"]`)
+             || document.getElementById(sectionId);
+    if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURE: CHECKLIST PRÉ-VIAGEM
+══════════════════════════════════════════════════════════════ */
+const Checklist = {
+  STORAGE_KEY: 'japao_checklist_v1',
+
+  GROUPS: [
+    {
+      title: '📄 Documentação',
+      items: [
+        'Passaportes válidos (mín. 6 meses)',
+        'Seguro viagem contratado',
+        'Visto — Japonês não exige para BR',
+        'Cópia digital dos documentos na nuvem',
+        'Carteira de vacinação (febre amarela)',
+      ]
+    },
+    {
+      title: '🎫 Reservas & Passes',
+      items: [
+        'JR Pass comprado e ativado',
+        'Voos de ida e volta confirmados',
+        'Todos os hotéis reservados',
+        'TeamLab Planets — ingresso',
+        'DisneySea — ingressos',
+        'Universal Studios Japan — ingresso',
+        'Restaurante Sukiyabashi Jiro (se quiser!)',
+      ]
+    },
+    {
+      title: '💴 Dinheiro & Cartões',
+      items: [
+        'Yen (¥) sacados antes da viagem',
+        'Cartão internacional desbloqueado',
+        'Aplicativo do banco configurado',
+        'IC Card (Suica/Pasmo) planejada',
+        'Orçamento diário definido',
+      ]
+    },
+    {
+      title: '🎒 Bagagem & Saúde',
+      items: [
+        'Adaptador de tomada (Tipo A)',
+        'Carregador portátil (power bank)',
+        'Chip internacional ou eSIM',
+        'Remédios básicos (antidiarreico, dor etc.)',
+        'Protetor solar FPS 50+',
+        'Roupas para chuva (outubro pode ter)',
+        'Sapatos confortáveis para caminhar',
+      ]
+    },
+    {
+      title: '📱 Apps & Tecnologia',
+      items: [
+        'Google Maps — mapas offline baixados',
+        'Google Translate — japonês offline',
+        'Hyperdia ou Google Maps para trens',
+        'App do banco para emergências',
+        'Roteiro instalado como app (PWA) 🌸',
+      ]
+    },
+  ],
+
+  _state: {},
+
+  load() {
+    try {
+      const s = localStorage.getItem(this.STORAGE_KEY);
+      this._state = s ? JSON.parse(s) : {};
+    } catch { this._state = {}; }
+  },
+
+  save() {
+    try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this._state)); } catch {}
+  },
+
+  toggle(groupIdx, itemIdx) {
+    const key = `${groupIdx}_${itemIdx}`;
+    this._state[key] = !this._state[key];
+    this.save();
+    this.updateProgress();
+    // Atualiza o item visualmente sem re-render completo
+    const item = document.querySelector(`[data-cl="${key}"]`);
+    if (item) item.classList.toggle('checked', this._state[key]);
+  },
+
+  updateProgress() {
+    let total = 0, done = 0;
+    this.GROUPS.forEach((g, gi) => {
+      g.items.forEach((_, ii) => {
+        total++;
+        if (this._state[`${gi}_${ii}`]) done++;
+      });
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const fill = document.getElementById('checklistBarFill');
+    const text = document.getElementById('checklistProgressText');
+    if (fill) fill.style.width = pct + '%';
+    if (text) text.textContent = `${done} de ${total} itens${pct === 100 ? ' 🎉' : ''}`;
+  },
+
+  render() {
+    this.load();
+    const container = document.getElementById('checklistGroups');
+    if (!container) return;
+
+    container.innerHTML = this.GROUPS.map((g, gi) => `
+      <div class="checklist-group">
+        <div class="checklist-group-title">${g.title}</div>
+        ${g.items.map((item, ii) => {
+          const key     = `${gi}_${ii}`;
+          const checked = this._state[key] ? 'checked' : '';
+          return `
+            <div class="checklist-item ${checked}" data-cl="${key}" onclick="Checklist.toggle(${gi},${ii})">
+              <div class="checklist-cb"></div>
+              <span class="checklist-text">${item}</span>
+            </div>`;
+        }).join('')}
+      </div>
+    `).join('');
+
+    this.updateProgress();
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURE: PWA — Service Worker & Install Prompt
+══════════════════════════════════════════════════════════════ */
+const PWAManager = {
+  _deferredPrompt: null,
+
+  init() {
+    // Registra Service Worker inline (via Blob)
+    this._registerSW();
+
+    // Captura o evento de instalação
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this._deferredPrompt = e;
+      // Mostra FAB de instalar e banner
+      const fab = document.getElementById('fabInstall');
+      if (fab) fab.style.display = '';
+      // Mostra banner apenas uma vez
+      const dismissed = localStorage.getItem('pwa_banner_dismissed');
+      if (!dismissed) {
+        document.getElementById('pwaBanner')?.classList.add('show');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this._deferredPrompt = null;
+      document.getElementById('fabInstall').style.display  = 'none';
+      document.getElementById('pwaBanner')?.classList.remove('show');
+      UI.showToast('📲 App instalado com sucesso! 🌸', 'success');
+    });
+
+    // Botões do banner
+    document.getElementById('pwaInstallBtn')?.addEventListener('click', () => this.install());
+    document.getElementById('pwaDismissBtn')?.addEventListener('click', () => {
+      document.getElementById('pwaBanner')?.classList.remove('show');
+      localStorage.setItem('pwa_banner_dismissed', '1');
+    });
+
+    // FAB de instalar
+    document.getElementById('fabInstall')?.addEventListener('click', () => this.install());
+  },
+
+  async install() {
+    if (!this._deferredPrompt) {
+      UI.showToast('Abra o roteiro no navegador do celular para instalar 📱', '');
+      return;
+    }
+    this._deferredPrompt.prompt();
+    const { outcome } = await this._deferredPrompt.userChoice;
+    if (outcome === 'accepted') this._deferredPrompt = null;
+  },
+
+  _registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    // Service Worker inline como Blob — cache dos assets principais
+    const swCode = `
+const CACHE = 'japao-v1';
+const ASSETS = [location.href];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request)))
+  );
+});`;
+    const blob   = new Blob([swCode], { type: 'application/javascript' });
+    const swURL  = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swURL).catch(() => {});
   }
 };
 
@@ -1779,6 +3139,13 @@ function init() {
   // 1. Carrega dados: localStorage tem prioridade sobre os defaults
   const saved = Storage.load();
   AppState = saved || JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+  // Migração: corrige datas antigas (2025) que possam estar no localStorage
+  if (AppState.departure && AppState.departure.startsWith('2025-')) {
+    AppState.departure  = AppState.departure.replace('2025-', '2026-');
+    AppState.returnDate = AppState.returnDate ? AppState.returnDate.replace('2025-', '2026-') : '2026-11-05';
+    Storage.save();
+  }
 
   // 2. Gera o fundo animado com emojis
   const shapes = ['🌸','🍃','✨','🍡','🍵','☁️','🤍'];
@@ -1816,8 +3183,10 @@ function init() {
     if(e.target.files[0]) Storage.importJSON(e.target.files[0]);
     e.target.value = '';
   });
-  document.getElementById('btnEditDicas').addEventListener('click', () => AdminPanel.openDicasModal());
-  document.getElementById('btnEditHero').addEventListener('click',  () => AdminPanel.openHeroModal());
+  document.getElementById('btnEditDicas').addEventListener('click',      () => AdminPanel.openDicasModal());
+  document.getElementById('btnEditHero').addEventListener('click',       () => AdminPanel.openHeroModal());
+  document.getElementById('btnEditChecklist').addEventListener('click',  () => AdminPanel.openChecklistModal());
+  document.getElementById('btnEditFooter').addEventListener('click',     () => AdminPanel.openFooterModal());
 
   // 7. Fecha modais ao clicar no overlay
   document.getElementById('modalOverlay').addEventListener('click', e => {
@@ -1834,18 +3203,23 @@ function init() {
   if(saved) {
     setTimeout(() => UI.showToast('Roteiro carregado do armazenamento local ✓', 'success'), 600);
   }
+
+  // 9. Novas features
+  RouteMap.render();
+  // Restaura grupos do checklist se salvos no AppState
+  if (AppState.checklistGroups) Checklist.GROUPS = AppState.checklistGroups;
+  Checklist.render();
+  Converter.initEvents();
+  PWAManager.init();
+
+  // FAB: Compartilhar
+  document.getElementById('fabShare')?.addEventListener('click', () => ShareTool.share());
+
+  // FAB: Conversor
+  document.getElementById('fabConverter')?.addEventListener('click', () => Converter.toggle());
 }
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js');
-  });
-}
-</script>
-
 </body>
 </html>
