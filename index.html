@@ -228,6 +228,28 @@
   .act-location-pin:hover .pin-icon { filter: grayscale(1) brightness(10); }
   .pin-icon { font-size: 14px; }
   .pin-label { line-height: 1; }
+
+  /* ── Location Autocomplete dropdown ── */
+  .loc-dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 9999;
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(163,144,228,0.2);
+    border: 1px solid rgba(163,144,228,0.25); max-height: 280px; overflow-y: auto;
+  }
+  .loc-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f0edf8;
+  }
+  .loc-item:last-of-type { border-bottom: none; }
+  .loc-item:hover, .loc-item.active { background: #f5f0ff; }
+  .loc-icon { font-size: 18px; flex-shrink: 0; }
+  .loc-info { flex: 1; min-width: 0; }
+  .loc-name { font-size: 13.5px; font-weight: 700; color: #2d2250; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .loc-sub  { font-size: 11px; color: #888; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .loc-gps  { font-size: 16px; flex-shrink: 0; opacity: 0.5; transition: opacity 0.15s; cursor: pointer; padding: 4px; }
+  .loc-gps:hover { opacity: 1; transform: scale(1.2); }
+  .loc-loading, .loc-empty { padding: 12px 16px; font-size: 13px; color: #888; font-weight: 600; }
+  .loc-tip { padding: 7px 14px; font-size: 11px; color: #aaa; background: #faf8ff; border-top: 1px solid #f0edf8; }
   .tip-row {
     display: flex; gap: 16px; align-items: center;
     background: linear-gradient(to right, rgba(208, 244, 222, 0.4), rgba(229, 217, 242, 0.4));
@@ -1499,11 +1521,10 @@ const Renderer = {
     return acts.map(a => {
       let locationHtml = '';
       if (a.location && a.location.trim()) {
-        // Monta URL para Google Maps com navegação ativada (modo directions/nav)
-        const encoded = encodeURIComponent(a.location);
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encoded}&travelmode=walking`;
+        const url = a.locationUrl ||
+          `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a.location)}&travelmode=walking`;
         locationHtml = `
-          <a class="act-location-pin" href="${mapsUrl}" target="_blank" rel="noopener" title="Abrir no GPS: ${a.location.replace(/"/g,'&quot;')}">
+          <a class="act-location-pin" href="${url}" target="_blank" rel="noopener" title="Abrir no GPS: ${a.location.replace(/"/g,'&quot;')}">
             <span class="pin-icon">📍</span><span class="pin-label">${a.location}</span>
           </a>`;
       }
@@ -1749,6 +1770,10 @@ const AdminPanel = {
       container.querySelectorAll('.act-location').forEach(inp => {
         inp.addEventListener('input', e => {
           formActs[parseInt(e.target.dataset.i)].location = e.target.value;
+        });
+        LocationAutocomplete.attach(inp, (place, i) => {
+          formActs[parseInt(i)].location     = place.name;
+          formActs[parseInt(i)].locationUrl  = place.url;
         });
       });
       container.querySelectorAll('.act-remove-btn').forEach(btn => {
@@ -2278,26 +2303,55 @@ const GeoWeather = {
     return diffDays <= 7; // previsão real só nos últimos 7 dias
   },
 
-  /* ─── Busca dados históricos de outubro (Open-Meteo /climate) ─── */
+  /* ─── Dados históricos estáticos de outubro (fallback garantido) ─── */
+  OCTOBER_CLIMATE: {
+    'Tóquio':        { tempMean: 18, tempMax: 22, tempMin: 14, rainPct: 22 },
+    'Japão':         { tempMean: 18, tempMax: 22, tempMin: 14, rainPct: 22 },
+    'Shinjuku':      { tempMean: 18, tempMax: 22, tempMin: 14, rainPct: 22 },
+    'Hakone':        { tempMean: 14, tempMax: 18, tempMin: 10, rainPct: 30 },
+    'Takayama':      { tempMean: 13, tempMax: 17, tempMin:  8, rainPct: 28 },
+    'Shirakawa-go':  { tempMean: 12, tempMax: 16, tempMin:  7, rainPct: 30 },
+    'Quioto':        { tempMean: 19, tempMax: 24, tempMin: 14, rainPct: 20 },
+    'Fushimi Inari': { tempMean: 19, tempMax: 24, tempMin: 14, rainPct: 20 },
+    'Kinkaku-ji':    { tempMean: 19, tempMax: 24, tempMin: 14, rainPct: 20 },
+    'Arashiyama':    { tempMean: 19, tempMax: 24, tempMin: 14, rainPct: 20 },
+    'Nara':          { tempMean: 19, tempMax: 24, tempMin: 13, rainPct: 20 },
+    'Osaka':         { tempMean: 20, tempMax: 25, tempMin: 15, rainPct: 18 },
+    'Dotonbori':     { tempMean: 20, tempMax: 25, tempMin: 15, rainPct: 18 },
+    'Universal Studios': { tempMean: 20, tempMax: 25, tempMin: 15, rainPct: 18 },
+    'Himeji':        { tempMean: 19, tempMax: 24, tempMin: 14, rainPct: 20 },
+    'Hiroshima':     { tempMean: 20, tempMax: 25, tempMin: 14, rainPct: 18 },
+    'Miyajima':      { tempMean: 20, tempMax: 25, tempMin: 14, rainPct: 18 },
+    'Narita':        { tempMean: 18, tempMax: 22, tempMin: 13, rainPct: 22 },
+  },
+
+  _staticClimate(cityName) {
+    const key = Object.keys(this.OCTOBER_CLIMATE).find(k =>
+      cityName.toLowerCase().includes(k.toLowerCase()) ||
+      k.toLowerCase().includes(cityName.toLowerCase().split(/[\/,]/)[0].trim())
+    );
+    return this.OCTOBER_CLIMATE[key] || this.OCTOBER_CLIMATE['Japão'];
+  },
+
+  /* ─── Busca dados históricos de outubro (Open-Meteo /forecast com datas passadas) ─── */
   async _fetchHistorical(lat, lon) {
-    const url = `https://climate-api.open-meteo.com/v1/climate`
+    // Usa a API de previsão com datas históricas do ano passado em outubro
+    const url = `https://api.open-meteo.com/v1/forecast`
       + `?latitude=${lat}&longitude=${lon}`
-      + `&start_date=1994-10-13&end_date=2023-10-25`
-      + `&models=ERA5`
-      + `&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum`
-      + `&timezone=Asia/Tokyo`;
-    const res  = await fetch(url);
-    if(!res.ok) throw new Error('climate ' + res.status);
+      + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`
+      + `&start_date=2024-10-13&end_date=2024-10-25`
+      + `&timezone=Asia%2FTokyo`;
+    const res  = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error('forecast-hist ' + res.status);
     const data = await res.json();
-    // Médias 30 anos
-    const avg = arr => arr.reduce((a,b) => a + (b||0), 0) / arr.filter(v => v != null).length;
+    const avg  = arr => arr.reduce((a, b) => a + (b || 0), 0) / arr.filter(v => v != null).length;
+    const mean = arr => arr.map((mx, i) => (mx + data.daily.temperature_2m_min[i]) / 2);
     return {
-      type:      'historico',
-      tempMean:  Math.round(avg(data.daily.temperature_2m_mean)),
-      tempMax:   Math.round(avg(data.daily.temperature_2m_max)),
-      tempMin:   Math.round(avg(data.daily.temperature_2m_min)),
-      rainDays:  data.daily.precipitation_sum.filter(v => v > 1).length,
-      totalDays: data.daily.precipitation_sum.filter(v => v != null).length,
+      type:     'historico',
+      tempMax:  Math.round(avg(data.daily.temperature_2m_max)),
+      tempMin:  Math.round(avg(data.daily.temperature_2m_min)),
+      tempMean: Math.round(avg(mean(data.daily.temperature_2m_max))),
+      rainPct:  Math.round(data.daily.precipitation_sum.filter(v => v > 1).length / data.daily.precipitation_sum.length * 100),
     };
   },
 
@@ -2317,15 +2371,16 @@ const GeoWeather = {
 
   /* ─── Renderiza widget com dados históricos ─── */
   _renderHistorical(widget, d, city) {
-    const rainPct = Math.round(d.rainDays / d.totalDays * 100);
+    const rainPct = d.rainPct ?? Math.round((d.rainDays || 0) / (d.totalDays || 1) * 100);
     const wmo     = { icon: rainPct > 40 ? '🌧️' : rainPct > 20 ? '⛅' : '☀️' };
+    const src     = d._source === 'static' ? '📊 Média histórica out' : '📅 Outubro passado';
     widget.innerHTML = `
       <div class="weather-top">
         <div class="weather-icon">${wmo.icon}</div>
         <div class="weather-main">
           <div class="weather-temp">${d.tempMean}<sup>°C</sup></div>
-          <div class="weather-desc">Média histórica outubro</div>
-          <div class="weather-source">${city} <span class="weather-badge badge-historico">30 anos</span></div>
+          <div class="weather-desc">Clima típico de outubro</div>
+          <div class="weather-source">${city} <span class="weather-badge badge-historico">${src}</span></div>
         </div>
       </div>
       <div class="weather-periods">
@@ -2412,21 +2467,30 @@ const GeoWeather = {
 
     try {
       let data;
-      if(this._cache[cacheKey]) {
+      if (this._cache[cacheKey]) {
         data = this._cache[cacheKey];
+      } else if (this._useRealForecast()) {
+        data = await this._fetchForecast(lat, lon);
+        this._cache[cacheKey] = data;
       } else {
-        data = this._useRealForecast()
-          ? await this._fetchForecast(lat, lon)
-          : await this._fetchHistorical(lat, lon);
+        // Tenta API; se falhar usa dados estáticos curados
+        try {
+          data = await this._fetchHistorical(lat, lon);
+        } catch (e) {
+          const s = this._staticClimate(city);
+          data = { type: 'historico', _source: 'static', ...s };
+        }
         this._cache[cacheKey] = data;
       }
 
-      if(data.type === 'historico') this._renderHistorical(widget, data, city);
-      else                          this._renderForecast(widget, data, city);
+      if (data.type === 'historico') this._renderHistorical(widget, data, city);
+      else                           this._renderForecast(widget, data, city);
 
-    } catch(err) {
+    } catch (err) {
+      // Último recurso: estático
       console.warn('GeoWeather error:', err);
-      widget.innerHTML = `<div class="weather-error">⚠️ Clima indisponível</div>`;
+      const s = this._staticClimate(city);
+      this._renderHistorical(widget, { type: 'historico', _source: 'static', ...s }, city);
     }
   },
 
@@ -2665,17 +2729,17 @@ const Converter = {
     // Tenta múltiplas APIs em sequência até conseguir
     const APIS = [
       async () => {
-        const r = await fetch('https://economia.awesomeapi.com.br/json/last/BRL-JPY');
+        const r = await fetch('https://economia.awesomeapi.com.br/json/last/BRL-JPY', { signal: AbortSignal.timeout(5000) });
         const d = await r.json();
         return parseFloat(d['BRLJPY']?.bid);
       },
       async () => {
-        const r = await fetch('https://open.er-api.com/v6/latest/BRL');
+        const r = await fetch('https://open.er-api.com/v6/latest/BRL', { signal: AbortSignal.timeout(5000) });
         const d = await r.json();
         return d.rates?.JPY;
       },
       async () => {
-        const r = await fetch('https://api.frankfurter.app/latest?from=BRL&to=JPY');
+        const r = await fetch('https://api.frankfurter.app/latest?from=BRL&to=JPY', { signal: AbortSignal.timeout(5000) });
         const d = await r.json();
         return d.rates?.JPY;
       },
@@ -2696,9 +2760,16 @@ const Converter = {
       } catch { /* tenta próxima */ }
     }
 
-    // Todas falharam
+    // Todas falharam — usa taxa de fallback e oferece consulta manual
+    this.rate = 22.0; // taxa aproximada de fallback (BRL→JPY)
+    this.updateFromBRL();
     if (el) {
-      el.innerHTML = `Cotação indisponível · <a href="#" onclick="Converter._fetched=false;Converter.fetchRate();return false;" style="color:var(--lilac-dark)">Tentar novamente</a>`;
+      el.innerHTML = `⚠️ Taxa aproximada (¥22/R$) ·
+        <a href="https://www.google.com/search?q=1+BRL+em+JPY" target="_blank" rel="noopener"
+           style="color:var(--lilac-dark);font-weight:700">Ver cotação real ↗</a> ·
+        <a href="#" onclick="Converter._fetched=false;Converter.fetchRate();return false;"
+           style="color:var(--lilac-dark)">Tentar novamente</a>`;
+      el.style.color = '#b07d2e';
     }
   },
 
@@ -3132,9 +3203,158 @@ self.addEventListener('fetch', e => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   INICIALIZAÇÃO
-   Ordem: carregar dados → gerar fundo → renderizar tudo → eventos
+   MÓDULO: LocationAutocomplete
+   Autocomplete inteligente para campos de local usando Nominatim
+   (OpenStreetMap) — gratuito, sem chave de API, com bias para Japão
 ══════════════════════════════════════════════════════════════ */
+const LocationAutocomplete = {
+  _cache: {},
+  _debounceTimer: null,
+
+  attach(input, onSelect) {
+    // Cria container de sugestões
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:100%';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'loc-dropdown';
+    dropdown.style.display = 'none';
+    wrap.appendChild(dropdown);
+
+    const idx = input.dataset.i;
+
+    input.addEventListener('input', () => {
+      clearTimeout(this._debounceTimer);
+      const q = input.value.trim();
+      if (q.length < 3) { dropdown.style.display = 'none'; return; }
+      dropdown.innerHTML = '<div class="loc-loading">🔍 Buscando…</div>';
+      dropdown.style.display = 'block';
+      this._debounceTimer = setTimeout(() => this._search(q, dropdown, input, onSelect, idx), 400);
+    });
+
+    // Fecha ao clicar fora
+    document.addEventListener('click', e => {
+      if (!wrap.contains(e.target)) dropdown.style.display = 'none';
+    });
+
+    // Navegar com teclado
+    input.addEventListener('keydown', e => {
+      const items = dropdown.querySelectorAll('.loc-item');
+      const active = dropdown.querySelector('.loc-item.active');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = active ? active.nextElementSibling : items[0];
+        if (next) { active?.classList.remove('active'); next.classList.add('active'); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = active ? active.previousElementSibling : items[items.length - 1];
+        if (prev) { active?.classList.remove('active'); prev.classList.add('active'); }
+      } else if (e.key === 'Enter' && active) {
+        e.preventDefault(); active.click();
+      } else if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+      }
+    });
+  },
+
+  async _search(q, dropdown, input, onSelect, idx) {
+    const cacheKey = q.toLowerCase();
+    let results;
+
+    try {
+      if (this._cache[cacheKey]) {
+        results = this._cache[cacheKey];
+      } else {
+        // Busca no Nominatim com bias para Japão (countrycodes=jp)
+        const url = `https://nominatim.openstreetmap.org/search`
+          + `?q=${encodeURIComponent(q + ' Japan')}`
+          + `&format=json&limit=6&countrycodes=jp`
+          + `&accept-language=pt,en`
+          + `&addressdetails=1`;
+        const res = await fetch(url, { headers: { 'Accept-Language': 'pt,en' } });
+        results = await res.json();
+        this._cache[cacheKey] = results;
+      }
+
+      if (!results.length) {
+        dropdown.innerHTML = '<div class="loc-empty">😕 Nenhum lugar encontrado. Tente em inglês (ex: Senso-ji Temple)</div>';
+        return;
+      }
+
+      dropdown.innerHTML = '';
+      results.forEach(r => {
+        const name    = this._formatName(r);
+        const sub     = this._formatSub(r);
+        const typeIcon = this._typeIcon(r.type, r.class);
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lon}&travelmode=walking`;
+
+        const item = document.createElement('div');
+        item.className = 'loc-item';
+        item.innerHTML = `
+          <span class="loc-icon">${typeIcon}</span>
+          <div class="loc-info">
+            <div class="loc-name">${name}</div>
+            <div class="loc-sub">${sub}</div>
+          </div>
+          <span class="loc-gps" title="Abrir GPS">🧭</span>`;
+
+        item.addEventListener('mouseenter', () => {
+          dropdown.querySelectorAll('.loc-item').forEach(el => el.classList.remove('active'));
+          item.classList.add('active');
+        });
+
+        item.addEventListener('click', e => {
+          if (e.target.classList.contains('loc-gps')) {
+            window.open(mapsUrl, '_blank'); return;
+          }
+          input.value = name;
+          onSelect({ name, url: mapsUrl }, idx);
+          dropdown.style.display = 'none';
+        });
+
+        dropdown.appendChild(item);
+      });
+
+      // Dica de GPS no rodapé do dropdown
+      const tip = document.createElement('div');
+      tip.className = 'loc-tip';
+      tip.innerHTML = '🧭 Clique no ícone para abrir o GPS direto';
+      dropdown.appendChild(tip);
+
+    } catch (err) {
+      dropdown.innerHTML = '<div class="loc-empty">⚠️ Erro na busca. Verifique a conexão.</div>';
+    }
+  },
+
+  _formatName(r) {
+    const a = r.address || {};
+    return r.name ||
+      a.tourism || a.amenity || a.shop || a.historic ||
+      a.road || a.suburb || a.city || r.display_name.split(',')[0];
+  },
+
+  _formatSub(r) {
+    const a = r.address || {};
+    const parts = [a.suburb || a.neighbourhood, a.city || a.town || a.village, a.state].filter(Boolean);
+    return parts.slice(0, 3).join(', ') || r.display_name.split(',').slice(1, 3).join(',').trim();
+  },
+
+  _typeIcon(type, cls) {
+    const map = {
+      attraction:'🏛️', museum:'🏛️', temple:'⛩️', shrine:'⛩️',
+      castle:'🏯', park:'🌳', garden:'🌸', restaurant:'🍜',
+      hotel:'🏨', station:'🚉', airport:'✈️', department_store:'🛍️',
+      mall:'🛍️', supermarket:'🛒', hospital:'🏥', pharmacy:'💊',
+      viewpoint:'👁️', beach:'🏖️', aquarium:'🐠', zoo:'🦁',
+      theme_park:'🎢', stadium:'🏟️', university:'🎓',
+    };
+    return map[type] || map[cls] || '📍';
+  }
+};
+
+
 function init() {
   // 1. Carrega dados: localStorage tem prioridade sobre os defaults
   const saved = Storage.load();
@@ -3223,3 +3443,4 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
+
