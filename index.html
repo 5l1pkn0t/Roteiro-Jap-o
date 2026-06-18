@@ -260,7 +260,7 @@
   .tip-text { font-size: 14px; line-height: 1.6; color: var(--ink); font-weight: 600; }
 
   /* ── LEAFLET (CDN) ── */
-  @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
 
   /* ── WEATHER WIDGET REFORMULADO ── */
   .card-geo-bar {
@@ -340,32 +340,34 @@
   .map-open-link:hover { background: var(--lilac-dark); color: #fff; transform: scale(1.05); }
 
   /* ── MAPA FIXO DA ROTA (canto inferior direito) ── */
-  #sticky-map-wrap {
+  #fab-maps {
     position: fixed; bottom: 32px; right: 32px; z-index: 800;
-    width: 280px; border-radius: 20px; overflow: hidden;
-    box-shadow: 0 12px 40px rgba(74,74,89,0.18);
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #fff; border: none; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(74,74,89,0.22), 0 1px 0 rgba(255,255,255,0.9) inset;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; transition: all 0.2s ease; text-decoration: none;
     border: 2px solid var(--lilac-pastel);
-    transition: all 0.35s cubic-bezier(0.25,0.8,0.25,1);
-    display: none;
   }
-  #sticky-map-wrap.visible { display: block; }
-  #sticky-map { width: 100%; height: 200px; }
-  #sticky-map-label {
-    background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-    padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
-    border-top: 1px solid var(--lilac-pastel);
+  #fab-maps:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 8px 28px rgba(163,144,228,0.4);
+    border-color: var(--lilac-dark);
   }
-  #sticky-map-city { font-size: 13px; font-weight: 800; color: var(--lilac-dark); }
-  #sticky-map-close {
-    background: none; border: none; cursor: pointer; font-size: 16px;
-    color: var(--muted); line-height: 1; padding: 0;
+  #fab-maps::after {
+    content: 'Google Maps';
+    position: absolute; right: 64px; top: 50%; transform: translateY(-50%);
+    background: rgba(45,34,80,0.85); color: #fff;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    padding: 5px 10px; border-radius: 8px; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s;
   }
+  #fab-maps:hover::after { opacity: 1; }
 
   @media (max-width: 768px) {
     .card-geo-bar { margin: 0 16px 16px; flex-direction: column; }
     .map-widget { min-height: 160px; }
-    #sticky-map-wrap { width: 240px; bottom: 80px; right: 12px; }
-    #sticky-map { height: 160px; }
+    #fab-maps { bottom: 80px; right: 16px; width: 50px; height: 50px; font-size: 22px; }
   }
 
   /* ── DICAS GRID ── */
@@ -383,6 +385,150 @@
   .dica-body { font-size: 14px; color: var(--muted); line-height: 1.6; font-weight: 600; }
 
   /* ── FOOTER ── */
+  /* ── RESTAURANTES ── */
+  .resto-section { margin-top: 80px; }
+  .resto-heading { font-family: 'Lora', serif; font-size: 36px; font-weight: 600; text-align: center; color: var(--lilac-dark); margin-bottom: 8px; }
+  .resto-sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .resto-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
+  .resto-filter-btn {
+    padding: 7px 18px; border-radius: 20px; border: 1.5px solid var(--lilac-pastel);
+    background: #fff; color: var(--lilac-dark); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .resto-filter-btn:hover, .resto-filter-btn.active {
+    background: var(--lilac-dark); color: #fff; border-color: var(--lilac-dark);
+  }
+  .resto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .resto-card {
+    background: var(--card-bg, #fff); border-radius: 20px;
+    border: 1.5px solid var(--lilac-pastel);
+    box-shadow: 0 4px 18px rgba(163,144,228,0.10);
+    overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; flex-direction: column;
+  }
+  .resto-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(163,144,228,0.18); }
+  .resto-card-top {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--lilac-pastel);
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .resto-emoji { font-size: 32px; flex-shrink: 0; line-height: 1; }
+  .resto-info { flex: 1; min-width: 0; }
+  .resto-name { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+  .resto-city-tag {
+    display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 10px;
+    border-radius: 12px; background: var(--lilac-pastel); color: var(--lilac-dark);
+    letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .resto-cuisine { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .resto-stars { color: #f5a623; font-size: 13px; margin-top: 2px; }
+  .resto-card-body { padding: 14px 20px; flex: 1; }
+  .resto-desc { font-size: 13.5px; color: var(--ink); line-height: 1.6; }
+  .resto-card-foot {
+    padding: 12px 20px; border-top: 1px solid var(--lilac-pastel);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .resto-price { font-size: 13px; font-weight: 800; color: var(--lilac-dark); }
+  .resto-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .resto-tag {
+    font-size: 11px; padding: 3px 9px; border-radius: 10px;
+    background: #f0ecfc; color: var(--lilac-dark); font-weight: 700;
+  }
+  .resto-maps-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: linear-gradient(135deg, #e8f4ff, #dff0ff);
+    border: 1px solid #b3d8ff; border-radius: 20px;
+    padding: 5px 13px; font-size: 12px; font-weight: 700;
+    color: #1a6fb3; text-decoration: none; white-space: nowrap;
+    transition: all 0.18s;
+  }
+  .resto-maps-btn:hover { background: #1a6fb3; color: #fff; border-color: #1a6fb3; }
+  .resto-empty { grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted); font-size: 15px; }
+
+  /* ── RESTAURANTES — Admin ── */
+  .resto-edit-card {
+    background: var(--card-bg,#fff); border-radius: 14px; padding: 16px;
+    border: 1px solid var(--lilac-pastel); margin-bottom: 14px;
+  }
+  .resto-edit-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .resto-edit-row .form-input { flex: 1; }
+
+  /* ── SHARED SECTION HEADINGS ── */
+  .section-heading-shared { font-family:'Lora',serif; font-size:36px; font-weight:600; text-align:center; color:var(--lilac-dark); margin-bottom:8px; }
+  .section-sub-shared { text-align:center; color:var(--muted); font-size:15px; margin-bottom:32px; }
+
+  /* ── INGRESSOS ── */
+  .ingressos-section { margin-top:80px; }
+  .ingressos-summary { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:28px; }
+  .ing-stat { background:var(--card-bg,#fff); border-radius:16px; border:1.5px solid var(--lilac-pastel); padding:14px 24px; text-align:center; min-width:110px; }
+  .ing-stat-num { font-family:'Lora',serif; font-size:28px; font-weight:700; color:var(--lilac-dark); }
+  .ing-stat-lbl { font-size:11px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.08em; margin-top:2px; }
+  .ingressos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+  .ing-card { background:var(--card-bg,#fff); border-radius:18px; border:1.5px solid var(--lilac-pastel); padding:18px 20px; display:flex; flex-direction:column; gap:10px; transition:transform .2s,box-shadow .2s; }
+  .ing-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(163,144,228,.15); }
+  .ing-card-top { display:flex; align-items:flex-start; gap:12px; }
+  .ing-emoji { font-size:28px; flex-shrink:0; }
+  .ing-name { font-weight:700; font-size:15px; color:var(--ink); line-height:1.3; }
+  .ing-city { font-size:12px; color:var(--muted); margin-top:2px; }
+  .ing-status { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:800; cursor:pointer; border:none; transition:all .15s; width:fit-content; }
+  .ing-status.pendente  { background:#fff3cd; color:#856404; }
+  .ing-status.reservado { background:#cfe2ff; color:#084298; }
+  .ing-status.confirmado{ background:#d1e7dd; color:#0a3622; }
+  .ing-card-foot { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .ing-data { font-size:12px; color:var(--muted); font-weight:600; }
+  .ing-link { font-size:12px; color:#1a6fb3; text-decoration:none; font-weight:700; }
+  .ing-link:hover { text-decoration:underline; }
+  .ing-prioridade { font-size:11px; padding:2px 9px; border-radius:10px; font-weight:800; }
+  .ing-prioridade.alta   { background:#fde8e8; color:#922; }
+  .ing-prioridade.media  { background:#fef3cd; color:#856404; }
+  .ing-prioridade.baixa  { background:#e8f5e9; color:#2e7d32; }
+
+  /* ── JR PASS ── */
+  .jr-section { margin-top:80px; }
+  .jr-wrap { max-width:780px; margin:0 auto; }
+  .jr-config { background:var(--card-bg,#fff); border-radius:20px; border:1.5px solid var(--lilac-pastel); padding:24px; margin-bottom:20px; }
+  .jr-config-title { font-size:14px; font-weight:800; color:var(--lilac-dark); margin-bottom:16px; text-transform:uppercase; letter-spacing:.08em; }
+  .jr-passes { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .jr-pass-btn { padding:8px 18px; border-radius:20px; border:1.5px solid var(--lilac-pastel); background:#fff; color:var(--ink); font-size:13px; font-weight:700; cursor:pointer; transition:all .18s; }
+  .jr-pass-btn.active, .jr-pass-btn:hover { background:var(--lilac-dark); color:#fff; border-color:var(--lilac-dark); }
+  .jr-trajetos { display:flex; flex-direction:column; gap:10px; }
+  .jr-trajeto-row { display:flex; gap:8px; align-items:center; background:#faf9fc; border-radius:12px; padding:10px 14px; }
+  .jr-trajeto-row .form-input { background:#fff; }
+  .jr-trajeto-row .jr-trecho { flex:1; }
+  .jr-trajeto-row .jr-preco  { width:90px; }
+  .jr-trajeto-row .jr-qtd   { width:60px; }
+  .jr-result { background:linear-gradient(135deg,var(--lilac-pastel),#e8f8ee); border-radius:20px; padding:24px 28px; text-align:center; }
+  .jr-result-title { font-size:13px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:16px; }
+  .jr-verdict { font-family:'Lora',serif; font-size:22px; font-weight:600; margin-bottom:8px; }
+  .jr-verdict.vale   { color:#1a7a40; }
+  .jr-verdict.nao-vale { color:#b03a2e; }
+  .jr-verdict.empate { color:var(--lilac-dark); }
+  .jr-numbers { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+  .jr-num { text-align:center; }
+  .jr-num-val { font-size:26px; font-weight:700; font-family:'Lora',serif; color:var(--lilac-dark); }
+  .jr-num-lbl { font-size:11px; color:var(--muted); font-weight:800; text-transform:uppercase; margin-top:3px; }
+  .jr-economy { font-size:14px; margin-top:12px; font-weight:600; }
+  .jr-economy.positivo { color:#1a7a40; }
+  .jr-economy.negativo { color:#b03a2e; }
+
+  /* ── FUSO HORÁRIO ── */
+  .fuso-section { margin-top:80px; }
+  .fuso-grid { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:900px; margin:0 auto; }
+  .fuso-card {
+    background:var(--card-bg,#fff); border-radius:20px; border:1.5px solid var(--lilac-pastel);
+    padding:20px 24px; min-width:180px; text-align:center; flex:1; max-width:220px;
+    transition:transform .2s,box-shadow .2s; position:relative;
+  }
+  .fuso-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(163,144,228,.15); }
+  .fuso-card.home { border-color:var(--lilac-dark); border-width:2px; }
+  .fuso-flag { font-size:30px; margin-bottom:6px; }
+  .fuso-city-name { font-size:13px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+  .fuso-time { font-family:'Lora',serif; font-size:36px; font-weight:700; color:var(--lilac-dark); line-height:1; }
+  .fuso-seconds { font-size:22px; opacity:.5; }
+  .fuso-date { font-size:12px; color:var(--muted); margin-top:6px; font-weight:600; }
+  .fuso-diff { font-size:11px; color:var(--lilac-dark); font-weight:800; margin-top:4px; background:var(--lilac-pastel); border-radius:10px; padding:2px 8px; display:inline-block; }
+  .fuso-home-badge { position:absolute; top:-8px; left:50%; transform:translateX(-50%); background:var(--lilac-dark); color:#fff; font-size:10px; font-weight:800; padding:2px 10px; border-radius:10px; white-space:nowrap; }
+
   .footer {
     margin-top: 80px; text-align: center; font-size: 16px; color: var(--muted);
     padding: 40px 20px; font-family: 'Lora', serif; font-style: italic;
@@ -887,6 +1033,10 @@
   <button class="tb-btn tb-btn-neutral" id="btnEditHero">🏷 Editar Hero</button>
   <button class="tb-btn tb-btn-neutral" id="btnEditChecklist">✅ Editar Checklist</button>
   <button class="tb-btn tb-btn-neutral" id="btnEditFooter">📝 Editar Rodapé</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditRestos">🍜 Restaurantes</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditIngressos">🎫 Ingressos</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditJR">🚄 JR Pass</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditFuso">🕐 Fusos</button>
 </div>
 
 <header class="hero" id="heroSection"></header>
@@ -924,19 +1074,43 @@
     <div class="dicas-grid" id="dicasGrid"></div>
   </section>
 
+  <!-- Restaurantes recomendados por cidade -->
+  <section class="resto-section" id="restoSection">
+    <h2 class="resto-heading">🍜 Restaurantes Recomendados</h2>
+    <p class="resto-sub">Os melhores da rota, selecionados a dedo</p>
+    <div class="resto-filters" id="restoFilters"></div>
+    <div class="resto-grid" id="restoGrid"></div>
+  </section>
+
+  <!-- Rastreador de Ingressos -->
+  <section class="ingressos-section" id="ingressosSection">
+    <h2 class="section-heading-shared">🎫 Ingressos &amp; Reservas</h2>
+    <p class="section-sub-shared">Tudo o que precisa ser agendado antes de embarcar</p>
+    <div class="ingressos-summary" id="ingressosSummary"></div>
+    <div class="ingressos-grid" id="ingressosGrid"></div>
+  </section>
+
+  <!-- Calculadora JR Pass -->
+  <section class="jr-section" id="jrSection">
+    <h2 class="section-heading-shared">🚄 Vale a Pena o JR Pass?</h2>
+    <p class="section-sub-shared">Compare o custo do pass com os trajetos do seu roteiro</p>
+    <div class="jr-wrap" id="jrWrap"></div>
+  </section>
+
+  <!-- Fuso Horário ao Vivo -->
+  <section class="fuso-section" id="fusoSection">
+    <h2 class="section-heading-shared">🕐 Fuso Horário ao Vivo</h2>
+    <p class="section-sub-shared">Horário atual nos seus destinos e em casa</p>
+    <div class="fuso-grid" id="fusoGrid"></div>
+  </section>
+
   <footer class="footer" id="footerEl">
     Roteiro desenhado com <span class="heart">💜</span> para celebrar o amor. Uma viagem inesquecível espera por vocês!
   </footer>
 </main>
 
 <!-- Mapa fixo (sticky) que aparece ao abrir um card -->
-<div id="sticky-map-wrap">
-  <div id="sticky-map"></div>
-  <div id="sticky-map-label">
-    <span id="sticky-map-city">📍 Japão</span>
-    <button id="sticky-map-close" title="Fechar mapa">✕</button>
-  </div>
-</div>
+<a id="fab-maps" href="https://www.google.com/maps/search/Japan" target="_blank" rel="noopener" title="Abrir Google Maps">🗺️</a>
 
 <!-- Botão flutuante para ativar/desativar modo edição -->
 <button class="admin-toggle-btn" id="adminToggleBtn" title="Modo Edição">✏️</button>
@@ -1223,10 +1397,52 @@ const DEFAULT_DATA = {
     { icon:"📱", title:"Suica Digital", body:"Colocar o cartão Suica na Apple Wallet/Google Pay facilita metrô, ônibus e até máquinas de suco nas ruas." },
     { icon:"🧳", title:"Viajem Leves", body:"O serviço Takuhaibin (envio de malas entre hotéis) é barato e essencial. Não entrem no trem bala com tralha!" }
   ],
+  restaurantes: [
+    { id:1, cidade:'Tóquio',    emoji:'🍣', nome:'Sushi Saito',          cozinha:'Sushi Omakase',    preco:'¥¥¥¥', estrelas:5, desc:'Um dos sushis mais famosos do mundo — reserva difícil, mas vale cada esforço. Peixe fresquíssimo, ambiente íntimo.', tags:['Imperdível','Reserva obrigatória'], maps:'https://www.google.com/maps/search/Sushi+Saito+Tokyo' },
+    { id:2, cidade:'Tóquio',    emoji:'🍜', nome:'Ichiran Shinjuku',     cozinha:'Ramen',            preco:'¥',    estrelas:4, desc:'Ramen solitário em cabines individuais — uma experiência única. Caldo tonkotsu cremoso, personalizado no formulário.', tags:['Sem reserva','Vegetariano?'], maps:'https://www.google.com/maps/search/Ichiran+Shinjuku' },
+    { id:3, cidade:'Tóquio',    emoji:'🥩', nome:'Yakiniku Jumbo',       cozinha:'Churrasco Japonês',preco:'¥¥¥', estrelas:4, desc:'Referência no churrasco japonês de Shinjuku. Carne wagyu de qualidade, ambiente animado e perfeito para celebrar.', tags:['Casal','Wagyu'], maps:'https://www.google.com/maps/search/Yakiniku+Jumbo+Shinjuku' },
+    { id:4, cidade:'Tóquio',    emoji:'🍡', nome:'Asakusa Imahan',       cozinha:'Sukiyaki',         preco:'¥¥¥', estrelas:5, desc:'Sukiyaki histórico perto do Senso-ji, funcionando desde 1895. Carne wagyu cozida na mesa, ambiente tradicional encantador.', tags:['Histórico','Wagyu'], maps:'https://www.google.com/maps/search/Asakusa+Imahan+Tokyo' },
+    { id:5, cidade:'Hakone',    emoji:'🍱', nome:'Kaiseki Ichii',        cozinha:'Kaiseki Ryokan',   preco:'¥¥¥¥',estrelas:5, desc:'Jantar kaiseki incluído no ryokan — pratos sazonais de outono servidos no quarto ou sala privativa. Experiência inesquecível.', tags:['No ryokan','Sazonal'], maps:'https://www.google.com/maps/search/Kaiseki+Hakone' },
+    { id:6, cidade:'Quioto',    emoji:'🍣', nome:'Nishiki Toro',         cozinha:'Sashimi & Sushi',  preco:'¥¥',  estrelas:4, desc:'Localizado perto do Mercado Nishiki. Fresquíssimo e acessível. Ótimo para almoço depois de explorar o mercado.', tags:['Almoço','Bom custo'], maps:'https://www.google.com/maps/search/Nishiki+Toro+Kyoto' },
+    { id:7, cidade:'Quioto',    emoji:'🌿', nome:'Shigetsu (Tenryuji)',  cozinha:'Shojin Ryori',     preco:'¥¥¥', estrelas:5, desc:'Culinária budista vegetariana dentro do templo Tenryuji em Arashiyama. Um almoço espiritual com jardim de bambu à vista.', tags:['Vegetariano','Templo'], maps:'https://www.google.com/maps/search/Shigetsu+Tenryuji+Kyoto' },
+    { id:8, cidade:'Quioto',    emoji:'🍵', nome:'Kikunoi Roan',         cozinha:'Kaiseki',          preco:'¥¥¥¥',estrelas:5, desc:'Kaiseki premiado com estrela Michelin. Uma das experiências gastronômicas mais elegantes de Quioto. Reserva antecipada.', tags:['Michelin','Reserva obrigatória'], maps:'https://www.google.com/maps/search/Kikunoi+Roan+Kyoto' },
+    { id:9, cidade:'Osaka',     emoji:'🐙', nome:'Takoyaki Juhachiban',  cozinha:'Takoyaki',         preco:'¥',   estrelas:4, desc:'Melhor takoyaki de Dotonbori, na opinião dos locais. Bolinha de polvo crocante por fora, cremosa por dentro. Fila sempre vale.', tags:['Street food','Icônico'], maps:'https://www.google.com/maps/search/Takoyaki+Juhachiban+Dotonbori' },
+    { id:10,cidade:'Osaka',     emoji:'🥩', nome:'Matsusakagyu Yakiniku M', cozinha:'Yakiniku Wagyu',preco:'¥¥¥¥',estrelas:5, desc:'Já está no roteiro com razão: wagyu de Matsusaka, considerada a melhor carne do mundo. Vista do Dotonbori de brinde.', tags:['Imperdível','Wagyu'], maps:'https://www.google.com/maps/search/Matsusakagyu+Yakiniku+M+Osaka' },
+    { id:11,cidade:'Osaka',     emoji:'🍱', nome:'Kichi Kichi Omurice',  cozinha:'Omurice',          preco:'¥¥',  estrelas:5, desc:'O famoso omurice do Chef Motokichi — virou viral no YouTube. Chef prepara na sua frente com performance incrível. Reserva meses antes!', tags:['Viral','Reserva obrigatória'], maps:'https://www.google.com/maps/search/Kichi+Kichi+Omurice+Kyoto' },
+    { id:12,cidade:'Hiroshima', emoji:'🍳', nome:'Okonomimura',          cozinha:'Okonomiyaki',      preco:'¥¥',  estrelas:4, desc:'Edifício inteiro dedicado ao okonomiyaki de Hiroshima — com macarrão soba dentro! Cada andar tem um chef diferente. Experiência única.', tags:['Típico','Street food'], maps:'https://www.google.com/maps/search/Okonomimura+Hiroshima' }
+  ],
   footer: 'Feito com <span class="heart">💜</span> para Angelo &amp; Dani • Lua de Mel Japão 2024',
   checklistGroups: null,
   departure: '2026-10-13',
-  returnDate: '2026-11-05'
+  returnDate: '2026-11-05',
+  ingressos: [
+    { id:1, emoji:'🏛️', nome:'TeamLab Planets Tokyo', cidade:'Tóquio', status:'pendente', prioridade:'alta', data:'13-20 Out', link:'https://planets.teamlab.art/tokyo/', nota:'Reservar com antecedência — esgota rápido!' },
+    { id:2, emoji:'🗼', nome:'Tokyo Skytree (topo)', cidade:'Tóquio', status:'pendente', prioridade:'media', data:'Qualquer dia', link:'https://www.tokyo-skytree.jp/en/', nota:'Ingresso do andar especial é separado' },
+    { id:3, emoji:'🎢', nome:'Universal Studios Japan', cidade:'Osaka', status:'pendente', prioridade:'alta', data:'Verificar datas', link:'https://www.usj.co.jp/web/en/us', nota:'Express Pass vale muito em outubro (alta temporada)' },
+    { id:4, emoji:'🎭', nome:'Show de Kabuki', cidade:'Quioto', status:'pendente', prioridade:'baixa', data:'Novembro', link:'https://www.kabuki-bito.jp/eng/', nota:'Sessões curtas de 1h disponíveis para turistas' },
+    { id:5, emoji:'🦌', nome:'Entrada Todaiji (Nara)', cidade:'Nara', status:'confirmado', prioridade:'baixa', data:'Qualquer dia', link:'https://www.todaiji.or.jp/english/', nota:'Sem reserva, paga na entrada' },
+    { id:6, emoji:'⛩️', nome:'Itsukushima (Miyajima)', cidade:'Hiroshima', status:'pendente', prioridade:'media', data:'Verificar maré', link:'https://www.miyajima.or.jp/english/', nota:'O torii fica na água apenas na maré alta — checar previsão!' }
+  ],
+  jr: {
+    passType: '21 dias',
+    passCosts: { '7 dias': 50000, '14 dias': 80000, '21 dias': 100000 },
+    trajetos: [
+      { trecho:'Tóquio → Hakone (Romancecar)', preco:4440, qtd:2 },
+      { trecho:'Hakone → Tóquio (volta)', preco:4440, qtd:2 },
+      { trecho:'Tóquio → Quioto (Shinkansen)', preco:13850, qtd:2 },
+      { trecho:'Quioto → Nara (ida e volta)', preco:720, qtd:4 },
+      { trecho:'Quioto → Osaka (ida e volta)', preco:560, qtd:4 },
+      { trecho:'Osaka → Hiroshima (Shinkansen)', preco:9870, qtd:2 },
+      { trecho:'Hiroshima → Miyajima (ferry+trem)', preco:380, qtd:4 },
+      { trecho:'Hiroshima → Tóquio (Shinkansen)', preco:18040, qtd:2 }
+    ]
+  },
+  fuso: [
+    { id:1, city:'Belo Horizonte', flag:'🇧🇷', tz:'America/Sao_Paulo', home:true },
+    { id:2, city:'Tóquio', flag:'🇯🇵', tz:'Asia/Tokyo', home:false },
+    { id:3, city:'Quioto', flag:'🇯🇵', tz:'Asia/Tokyo', home:false },
+    { id:4, city:'Osaka', flag:'🇯🇵', tz:'Asia/Tokyo', home:false }
+  ]
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -1311,6 +1527,10 @@ const Renderer = {
     this.renderTimeline();
     this.renderDicas();
     this.renderFooter();
+    Restaurantes.render();
+    Ingressos.render();
+    JRPass.render();
+    Fuso.init();
   },
 
   /** Renderiza o rodapé */
@@ -1490,7 +1710,7 @@ const Renderer = {
           GeoWeather.fetchAndRender(ww);
         }
 
-        // Mapa Leaflet inline — inicia apenas na primeira abertura
+        // Mini mapa inline — abre Google Maps ao clicar
         const mw = card.querySelector('.map-widget');
         if(mw && !mw.dataset.mapLoaded) {
           mw.dataset.mapLoaded = '1';
@@ -1499,7 +1719,7 @@ const Renderer = {
           GeoWeather.initCardMap(mw, lat, lon, mapsUrl);
         }
 
-        // Atualiza o mapa fixo (sticky) para a cidade deste card
+        // Atualiza o botão Google Maps para a cidade deste card
         GeoWeather.flyTo(day.city, day.city);
       }
     });
@@ -2497,114 +2717,27 @@ const GeoWeather = {
   /* ══════════════════════════════════════════
      MAPA LEAFLET — instância única compartilhada
   ══════════════════════════════════════════ */
-  _leafletLoaded: false,
-  _map: null,
-  _marker: null,
-
-  /* Carrega Leaflet via CDN uma única vez */
-  async _ensureLeaflet() {
-    if(this._leafletLoaded) return;
-    await new Promise((res, rej) => {
-      // CSS
-      if(!document.querySelector('#leaflet-css')) {
-        const link = document.createElement('link');
-        link.id    = 'leaflet-css';
-        link.rel   = 'stylesheet';
-        link.href  = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-      }
-      // JS
-      const s  = document.createElement('script');
-      s.src    = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      s.onload = res; s.onerror = rej;
-      document.head.appendChild(s);
-    });
-    this._leafletLoaded = true;
-  },
-
-  /* Inicializa o mapa fixo no canto */
-  async initStickyMap() {
-    await this._ensureLeaflet();
-    const L   = window.L;
-    this._map = L.map('sticky-map', { zoomControl: false, attributionControl: false })
-                 .setView([36.5, 138.0], 5);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18, opacity: 0.92,
-    }).addTo(this._map);
-
-    // Zoom suave no controle
-    L.control.zoom({ position: 'topright' }).addTo(this._map);
-
-    // Marker personalizado roxo
-    const icon = L.divIcon({
-      html: `<div style="
-        width:28px;height:28px;border-radius:50% 50% 50% 0;
-        background:#a390e4;border:3px solid #fff;
-        box-shadow:0 2px 8px rgba(0,0,0,0.3);
-        transform:rotate(-45deg);
-      "></div>`,
-      iconSize: [28,28], iconAnchor: [14,28], className: ''
-    });
-
-    this._marker = L.marker([35.6762, 139.6503], { icon }).addTo(this._map);
-
-    // Botão fechar
-    document.getElementById('sticky-map-close').addEventListener('click', () => {
-      document.getElementById('sticky-map-wrap').classList.remove('visible');
-    });
-  },
-
-  /* Voa para uma cidade e mostra o mapa fixo */
+  /* Atualiza o botão do Google Maps com a cidade atual */
   flyTo(cityStr, label) {
-    const geo  = this.resolveCity(cityStr);
-    const wrap = document.getElementById('sticky-map-wrap');
-    const lbl  = document.getElementById('sticky-map-city');
-
-    if(!this._map) { this.initStickyMap().then(() => this.flyTo(cityStr, label)); return; }
-
-    wrap.classList.add('visible');
-    if(lbl) lbl.textContent = `📍 ${label || geo.name}`;
-    this._map.flyTo([geo.lat, geo.lon], 13, { animate: true, duration: 1.2 });
-    this._marker.setLatLng([geo.lat, geo.lon]);
-    // Fix: Leaflet precisa saber que o container foi exibido
-    setTimeout(() => this._map.invalidateSize(), 350);
+    const geo = this.resolveCity(cityStr);
+    const fab = document.getElementById('fab-maps');
+    if (fab) {
+      const q = encodeURIComponent((label || geo.name) + ', Japan');
+      fab.href = `https://www.google.com/maps/search/${q}`;
+    }
   },
 
-  /* Mini mapa inline em cada card (Leaflet, substituí iframe) */
+  /* Mini mapa inline em cada card — agora é um link estático para o Google Maps */
   async initCardMap(container, lat, lon, mapsUrl) {
-    await this._ensureLeaflet();
-    const L    = window.L;
     const mapEl = container.querySelector('.map-widget-inner');
-    if(!mapEl) return;
-
-    const m = L.map(mapEl, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false })
-               .setView([lat, lon], 14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18, opacity: 0.9,
-    }).addTo(m);
-
-    const icon = L.divIcon({
-      html: `<div style="
-        width:22px;height:22px;border-radius:50% 50% 50% 0;
-        background:#a390e4;border:2.5px solid #fff;
-        box-shadow:0 2px 6px rgba(0,0,0,0.3);
-        transform:rotate(-45deg);
-      "></div>`,
-      iconSize: [22,22], iconAnchor: [11,22], className: ''
-    });
-
-    L.marker([lat, lon], { icon }).addTo(m);
-
-    // Clique no mapa ativa dragging e abre em fullscreen (sticky map)
-    mapEl.addEventListener('click', () => {
-      const cityLabel = container.closest('.day-card')?.querySelector('.card-city')?.textContent?.replace('📍','').trim();
-      this.flyTo(`${lat},${lon}`, cityLabel);
-    });
-
-    // Garante render correto após o card abrir (transition)
-    setTimeout(() => m.invalidateSize(), 400);
+    if (!mapEl) return;
+    mapEl.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e8f4ff,#dff0ff);border-radius:12px;';
+    mapEl.innerHTML = `
+      <a href="${mapsUrl}" target="_blank" rel="noopener"
+         style="display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;padding:20px">
+        <span style="font-size:36px">🗺️</span>
+        <span style="font-size:12px;font-weight:700;color:#1a6fb3">Abrir no Google Maps</span>
+      </a>`;
   }
 };
 
@@ -3203,6 +3336,454 @@ self.addEventListener('fetch', e => {
 };
 
 /* ══════════════════════════════════════════════════════════════
+   MÓDULO: Restaurantes
+   Seção de restaurantes recomendados por cidade, editável e filtrável
+══════════════════════════════════════════════════════════════ */
+const Restaurantes = {
+  _activeCity: 'Todos',
+
+  get data() { return AppState.restaurantes || []; },
+
+  cities() {
+    const all = [...new Set(this.data.map(r => r.cidade))];
+    return ['Todos', ...all];
+  },
+
+  render() {
+    this._renderFilters();
+    this._renderGrid();
+  },
+
+  _renderFilters() {
+    const el = document.getElementById('restoFilters');
+    if (!el) return;
+    el.innerHTML = this.cities().map(c => `
+      <button class="resto-filter-btn${this._activeCity === c ? ' active' : ''}" data-city="${c}">
+        ${c === 'Todos' ? '🍽️ Todos' : c}
+      </button>`).join('');
+    el.querySelectorAll('.resto-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._activeCity = btn.dataset.city;
+        this._renderFilters();
+        this._renderGrid();
+      });
+    });
+  },
+
+  _renderGrid() {
+    const el = document.getElementById('restoGrid');
+    if (!el) return;
+    const list = this._activeCity === 'Todos'
+      ? this.data
+      : this.data.filter(r => r.cidade === this._activeCity);
+
+    if (!list.length) {
+      el.innerHTML = '<div class="resto-empty">Nenhum restaurante cadastrado para esta cidade.</div>';
+      return;
+    }
+
+    el.innerHTML = list.map(r => {
+      const stars = '★'.repeat(r.estrelas || 0) + '☆'.repeat(5 - (r.estrelas || 0));
+      const tags  = (r.tags || []).map(t => `<span class="resto-tag">${t}</span>`).join('');
+      return `
+        <div class="resto-card">
+          <div class="resto-card-top">
+            <span class="resto-emoji">${r.emoji || '🍽️'}</span>
+            <div class="resto-info">
+              <div class="resto-name">${r.nome}</div>
+              <span class="resto-city-tag">${r.cidade}</span>
+              <div class="resto-cuisine">${r.cozinha}</div>
+              <div class="resto-stars">${stars}</div>
+            </div>
+          </div>
+          <div class="resto-card-body">
+            <div class="resto-desc">${r.desc}</div>
+          </div>
+          <div class="resto-card-foot">
+            <div>
+              <div class="resto-price">${r.preco || ''}</div>
+              <div class="resto-tags">${tags}</div>
+            </div>
+            <a class="resto-maps-btn" href="${r.maps || '#'}" target="_blank" rel="noopener">📍 Ver no Maps</a>
+          </div>
+        </div>`;
+    }).join('');
+  },
+
+  /* ── Modal de edição ── */
+  openModal() {
+    let formList = JSON.parse(JSON.stringify(this.data));
+    let nextId   = Math.max(0, ...formList.map(r => r.id || 0)) + 1;
+
+    const renderList = () => {
+      const c = document.getElementById('restoFormList');
+      if (!c) return;
+      c.innerHTML = formList.map((r, i) => `
+        <div class="resto-edit-card" data-i="${i}">
+          <div class="resto-edit-row">
+            <input class="form-input rf-emoji" data-i="${i}" value="${r.emoji||'🍽️'}" style="width:54px;text-align:center;font-size:20px" placeholder="🍽️">
+            <input class="form-input rf-nome" data-i="${i}" value="${r.nome||''}" placeholder="Nome do restaurante" style="flex:2">
+            <input class="form-input rf-cidade" data-i="${i}" value="${r.cidade||''}" placeholder="Cidade" style="flex:1">
+            <button class="act-remove-btn rf-del" data-i="${i}" title="Remover">🗑</button>
+          </div>
+          <div class="resto-edit-row">
+            <input class="form-input rf-cozinha" data-i="${i}" value="${r.cozinha||''}" placeholder="Tipo de cozinha (ex: Sushi Omakase)">
+            <select class="form-select rf-estrelas" data-i="${i}" style="width:110px;flex-shrink:0">
+              ${[1,2,3,4,5].map(n=>`<option value="${n}"${(r.estrelas||5)===n?' selected':''}>${'★'.repeat(n)}</option>`).join('')}
+            </select>
+            <select class="form-select rf-preco" data-i="${i}" style="width:90px;flex-shrink:0">
+              ${['¥','¥¥','¥¥¥','¥¥¥¥'].map(p=>`<option value="${p}"${r.preco===p?' selected':''}>${p}</option>`).join('')}
+            </select>
+          </div>
+          <textarea class="form-textarea rf-desc" data-i="${i}" placeholder="Descrição e dica…" style="margin:0 0 8px">${r.desc||''}</textarea>
+          <input class="form-input rf-tags" data-i="${i}" value="${(r.tags||[]).join(', ')}" placeholder="Tags separadas por vírgula (ex: Imperdível, Wagyu)">
+          <input class="form-input rf-maps" data-i="${i}" value="${r.maps||''}" placeholder="Link Google Maps" style="margin-top:6px;font-size:12px">
+        </div>`).join('');
+
+      const bind = (sel, field, transform) => {
+        c.querySelectorAll(sel).forEach(el => {
+          el.addEventListener('input', e => {
+            const v = transform ? transform(e.target.value) : e.target.value;
+            formList[parseInt(e.target.dataset.i)][field] = v;
+          });
+          el.addEventListener('change', e => {
+            const v = transform ? transform(e.target.value) : e.target.value;
+            formList[parseInt(e.target.dataset.i)][field] = v;
+          });
+        });
+      };
+
+      bind('.rf-emoji',    'emoji');
+      bind('.rf-nome',     'nome');
+      bind('.rf-cidade',   'cidade');
+      bind('.rf-cozinha',  'cozinha');
+      bind('.rf-estrelas', 'estrelas', v => parseInt(v));
+      bind('.rf-preco',    'preco');
+      bind('.rf-desc',     'desc');
+      bind('.rf-maps',     'maps');
+      bind('.rf-tags',     'tags', v => v.split(',').map(t => t.trim()).filter(Boolean));
+
+      c.querySelectorAll('.rf-del').forEach(btn => {
+        btn.addEventListener('click', e => {
+          formList.splice(parseInt(e.target.dataset.i), 1);
+          renderList();
+        });
+      });
+    };
+
+    UI.openModal('🍜 Editar Restaurantes',
+      `<div id="restoFormList"></div>
+       <button class="add-act-inline-btn" id="restoAddBtn" style="margin-top:12px">＋ Adicionar Restaurante</button>`,
+      [
+        { label: '💾 Salvar', cls: 'tb-btn-primary', action: () => {
+          AppState.restaurantes = formList;
+          Storage.save();
+          Restaurantes.render();
+          UI.closeModal();
+          UI.showToast('Restaurantes atualizados! 🍜', 'success');
+        }},
+        { label: 'Cancelar', cls: 'tb-btn-neutral', action: UI.closeModal }
+      ]
+    );
+
+    setTimeout(() => {
+      renderList();
+      document.getElementById('restoAddBtn').addEventListener('click', () => {
+        formList.push({ id: nextId++, cidade:'Tóquio', emoji:'🍽️', nome:'', cozinha:'', preco:'¥¥', estrelas:4, desc:'', tags:[], maps:'' });
+        renderList();
+      });
+    }, 50);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO: Ingressos — Rastreador de ingressos e reservas
+══════════════════════════════════════════════════════════════ */
+const Ingressos = {
+  STATUSES: ['pendente','reservado','confirmado'],
+  STATUS_LABELS: { pendente:'⏳ Pendente', reservado:'📋 Reservado', confirmado:'✅ Confirmado' },
+  PRIORIDADES: ['alta','media','baixa'],
+  PRIO_LABELS: { alta:'🔴 Alta', media:'🟡 Média', baixa:'🟢 Baixa' },
+
+  get data() { return AppState.ingressos || []; },
+
+  render() { this._renderSummary(); this._renderGrid(); },
+
+  _renderSummary() {
+    const el = document.getElementById('ingressosSummary');
+    if (!el) return;
+    const total = this.data.length;
+    const conf  = this.data.filter(i => i.status==='confirmado').length;
+    const res   = this.data.filter(i => i.status==='reservado').length;
+    const pend  = this.data.filter(i => i.status==='pendente').length;
+    el.innerHTML = `
+      <div class="ing-stat"><div class="ing-stat-num">${total}</div><div class="ing-stat-lbl">Total</div></div>
+      <div class="ing-stat"><div class="ing-stat-num" style="color:#0a3622">${conf}</div><div class="ing-stat-lbl">Confirmados</div></div>
+      <div class="ing-stat"><div class="ing-stat-num" style="color:#084298">${res}</div><div class="ing-stat-lbl">Reservados</div></div>
+      <div class="ing-stat"><div class="ing-stat-num" style="color:#856404">${pend}</div><div class="ing-stat-lbl">Pendentes</div></div>`;
+  },
+
+  _renderGrid() {
+    const el = document.getElementById('ingressosGrid');
+    if (!el) return;
+    if (!this.data.length) { el.innerHTML='<p style="text-align:center;color:var(--muted);padding:32px">Nenhum ingresso cadastrado ainda.</p>'; return; }
+    el.innerHTML = this.data.map(ing => `
+      <div class="ing-card">
+        <div class="ing-card-top">
+          <span class="ing-emoji">${ing.emoji||'🎫'}</span>
+          <div style="flex:1">
+            <div class="ing-name">${ing.nome}</div>
+            <div class="ing-city">📍 ${ing.cidade}${ing.data?' &nbsp;·&nbsp; 📅 '+ing.data:''}</div>
+          </div>
+        </div>
+        ${ing.nota?`<div style="font-size:13px;color:var(--ink);line-height:1.5;background:#faf9fc;border-radius:10px;padding:8px 12px">${ing.nota}</div>`:''}
+        <div class="ing-card-foot">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="ing-status ${ing.status}" data-id="${ing.id}">${this.STATUS_LABELS[ing.status]||ing.status}</button>
+            <span class="ing-prioridade ${ing.prioridade||'media'}">${this.PRIO_LABELS[ing.prioridade]||'Média'}</span>
+          </div>
+          ${ing.link?`<a class="ing-link" href="${ing.link}" target="_blank" rel="noopener">🔗 Site oficial</a>`:''}
+        </div>
+      </div>`).join('');
+
+    el.querySelectorAll('.ing-status').forEach(btn => btn.addEventListener('click', e => {
+      const id = parseInt(e.currentTarget.dataset.id);
+      const ing = AppState.ingressos.find(x => x.id===id);
+      if (!ing) return;
+      ing.status = this.STATUSES[(this.STATUSES.indexOf(ing.status)+1) % this.STATUSES.length];
+      Storage.save(); this.render();
+    }));
+  },
+
+  openModal() {
+    let form = JSON.parse(JSON.stringify(this.data));
+    let nextId = Math.max(0,...form.map(x=>x.id||0))+1;
+    const renderList = () => {
+      const c = document.getElementById('ingFormList');
+      if (!c) return;
+      c.innerHTML = form.map((ing,i) => `
+        <div style="background:var(--card-bg,#fff);border-radius:14px;padding:14px;border:1px solid var(--lilac-pastel);margin-bottom:12px">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input class="form-input if-emoji" data-i="${i}" value="${ing.emoji||'🎫'}" style="width:52px;text-align:center;font-size:20px">
+            <input class="form-input if-nome"  data-i="${i}" value="${ing.nome||''}"   placeholder="Nome do ingresso/reserva" style="flex:2">
+            <input class="form-input if-cidade" data-i="${i}" value="${ing.cidade||''}" placeholder="Cidade" style="flex:1">
+            <button class="act-remove-btn if-del" data-i="${i}">🗑</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input class="form-input if-data" data-i="${i}" value="${ing.data||''}" placeholder="Data prevista">
+            <select class="form-select if-status" data-i="${i}">${this.STATUSES.map(s=>`<option value="${s}"${ing.status===s?' selected':''}>${this.STATUS_LABELS[s]}</option>`).join('')}</select>
+            <select class="form-select if-prio"   data-i="${i}">${this.PRIORIDADES.map(p=>`<option value="${p}"${(ing.prioridade||'media')===p?' selected':''}>${this.PRIO_LABELS[p]}</option>`).join('')}</select>
+          </div>
+          <input class="form-input if-link" data-i="${i}" value="${ing.link||''}" placeholder="Link site oficial" style="margin-bottom:8px">
+          <textarea class="form-textarea if-nota" data-i="${i}" placeholder="Nota/dica" style="margin:0">${ing.nota||''}</textarea>
+        </div>`).join('');
+      const bind = (sel,field) => c.querySelectorAll(sel).forEach(el => {
+        el.addEventListener('input', e=>{ form[parseInt(e.target.dataset.i)][field]=e.target.value; });
+        el.addEventListener('change',e=>{ form[parseInt(e.target.dataset.i)][field]=e.target.value; });
+      });
+      bind('.if-emoji','emoji'); bind('.if-nome','nome'); bind('.if-cidade','cidade');
+      bind('.if-data','data');   bind('.if-status','status'); bind('.if-prio','prioridade');
+      bind('.if-link','link');   bind('.if-nota','nota');
+      c.querySelectorAll('.if-del').forEach(btn => btn.addEventListener('click', e => {
+        form.splice(parseInt(e.target.dataset.i),1); renderList();
+      }));
+    };
+    UI.openModal('🎫 Editar Ingressos & Reservas',
+      `<div id="ingFormList"></div><button class="add-act-inline-btn" id="ingAddBtn" style="margin-top:10px">＋ Adicionar Ingresso</button>`,
+      [{ label:'💾 Salvar', cls:'tb-btn-primary', action:()=>{ AppState.ingressos=form; Storage.save(); Ingressos.render(); UI.closeModal(); UI.showToast('Ingressos atualizados! 🎫','success'); }},
+       { label:'Cancelar', cls:'tb-btn-neutral', action:UI.closeModal }]
+    );
+    setTimeout(()=>{ renderList(); document.getElementById('ingAddBtn').addEventListener('click',()=>{ form.push({id:nextId++,emoji:'🎫',nome:'',cidade:'',status:'pendente',prioridade:'media',data:'',link:'',nota:''}); renderList(); }); },50);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO: JRPass — Calculadora de viabilidade do JR Pass
+══════════════════════════════════════════════════════════════ */
+const JRPass = {
+  get data() { return AppState.jr || {passType:'21 dias',passCosts:{'7 dias':50000,'14 dias':80000,'21 dias':100000},trajetos:[]}; },
+
+  render() {
+    const el = document.getElementById('jrWrap');
+    if (!el) return;
+    const d = this.data;
+    const totalTrajetos = d.trajetos.reduce((sum,t) => sum+(parseFloat(t.preco)||0)*(parseInt(t.qtd)||1), 0);
+    const passCost      = d.passCosts[d.passType] || 0;
+    const economia      = totalTrajetos - passCost;
+    const vale          = economia > 500;
+    const naoVale       = economia < -500;
+    const verdictText   = vale ? '✅ Vale a pena comprar o JR Pass!' : naoVale ? '❌ Não vale — pague avulso' : '⚖️ Praticamente empatado';
+    const verdictCls    = vale ? 'vale' : naoVale ? 'nao-vale' : 'empate';
+    const economiaTxt   = economia >= 0
+      ? `Você economiza ¥${Math.abs(economia).toLocaleString()} (≈ R$${Math.round(Math.abs(economia)/20).toLocaleString()}) com o pass`
+      : `Você gasta ¥${Math.abs(economia).toLocaleString()} a mais comprando o pass`;
+
+    el.innerHTML = `
+      <div class="jr-config">
+        <div class="jr-config-title">Tipo de Pass</div>
+        <div class="jr-passes" id="jrPassBtns">
+          ${Object.keys(d.passCosts).map(k=>`<button class="jr-pass-btn${d.passType===k?' active':''}" data-pass="${k}">${k} — ¥${d.passCosts[k].toLocaleString()}</button>`).join('')}
+          <button class="jr-pass-btn" id="jrEditPrices" style="opacity:.65">⚙️ Editar preços</button>
+        </div>
+        <div class="jr-config-title" style="margin-top:16px">Trajetos Planejados <span style="font-weight:400;opacity:.6">(por pessoa)</span></div>
+        <div class="jr-trajetos" id="jrTrajetos">
+          ${d.trajetos.map((t,i) => `
+            <div class="jr-trajeto-row">
+              <input class="form-input jr-trecho" data-i="${i}" value="${t.trecho||''}" placeholder="Trajeto (ex: Tóquio → Osaka)">
+              <input class="form-input jr-preco" data-i="${i}" value="${t.preco||''}" placeholder="¥/pessoa" type="number" style="width:100px">
+              <input class="form-input jr-qtd"   data-i="${i}" value="${t.qtd||2}"    placeholder="Qtd" type="number" min="1" style="width:60px">
+              <button class="act-remove-btn jr-del-traj" data-i="${i}">✕</button>
+            </div>`).join('')}
+        </div>
+        <button class="add-act-inline-btn" id="jrAddTraj" style="margin-top:10px">＋ Adicionar Trajeto</button>
+      </div>
+      <div class="jr-result">
+        <div class="jr-result-title">Resultado da Simulação</div>
+        <div class="jr-verdict ${verdictCls}">${verdictText}</div>
+        <div class="jr-numbers">
+          <div class="jr-num"><div class="jr-num-val">¥${totalTrajetos.toLocaleString()}</div><div class="jr-num-lbl">Custo Avulso Total</div></div>
+          <div class="jr-num"><div class="jr-num-val">¥${passCost.toLocaleString()}</div><div class="jr-num-lbl">Custo do ${d.passType} <span style="font-size:11px;opacity:.6">(por pessoa)</span></div></div>
+        </div>
+        <div class="jr-economy ${economia>=0?'positivo':'negativo'}">${economiaTxt}</div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">* Preços em ¥ por pessoa. Cotação de referência: ¥1 ≈ R$0,05 — <a href="https://www.japanrailpass.net" target="_blank" style="color:var(--lilac-dark)">japanrailpass.net</a></p>
+      </div>`;
+
+    el.querySelectorAll('.jr-pass-btn:not(#jrEditPrices)').forEach(btn => btn.addEventListener('click', () => {
+      AppState.jr.passType = btn.dataset.pass; Storage.save(); this.render();
+    }));
+    document.getElementById('jrEditPrices').addEventListener('click', () => this.openPassCostModal());
+    const bindTraj = (sel, field, t) => el.querySelectorAll(sel).forEach(inp => inp.addEventListener('input', e => {
+      AppState.jr.trajetos[parseInt(e.target.dataset.i)][field] = t ? t(e.target.value) : e.target.value;
+      Storage.save(); this.render();
+    }));
+    bindTraj('.jr-trecho','trecho');
+    bindTraj('.jr-preco','preco', v=>parseFloat(v)||0);
+    bindTraj('.jr-qtd',  'qtd',   v=>parseInt(v)||1);
+    el.querySelectorAll('.jr-del-traj').forEach(btn => btn.addEventListener('click', e => {
+      AppState.jr.trajetos.splice(parseInt(e.target.dataset.i),1); Storage.save(); this.render();
+    }));
+    el.querySelector('#jrAddTraj').addEventListener('click', () => {
+      AppState.jr.trajetos.push({trecho:'',preco:0,qtd:2}); Storage.save(); this.render();
+    });
+  },
+
+  openPassCostModal() {
+    const d = this.data;
+    let form = JSON.parse(JSON.stringify(d.passCosts));
+    UI.openModal('🚄 Editar Preços dos Passes',
+      `<p style="font-size:13px;color:var(--muted);margin-bottom:16px">Preços em ¥ por pessoa. Consulte <a href="https://www.japanrailpass.net" target="_blank">japanrailpass.net</a></p>
+       ${Object.keys(form).map(k=>`<div class="form-group"><label class="form-label">JR Pass ${k}</label><input class="form-input jr-cost-inp" data-k="${k}" value="${form[k]}" type="number"></div>`).join('')}`,
+      [{ label:'💾 Salvar', cls:'tb-btn-primary', action:()=>{
+        document.querySelectorAll('.jr-cost-inp').forEach(inp=>{ form[inp.dataset.k]=parseFloat(inp.value)||0; });
+        AppState.jr.passCosts=form; Storage.save(); JRPass.render(); UI.closeModal(); UI.showToast('Preços atualizados! 🚄','success');
+      }},{ label:'Cancelar', cls:'tb-btn-neutral', action:UI.closeModal }]
+    );
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO: Fuso — Relógios ao vivo com múltiplos fusos horários
+══════════════════════════════════════════════════════════════ */
+const Fuso = {
+  _timer: null,
+  get data() { return AppState.fuso || []; },
+
+  init() {
+    this.render();
+    clearInterval(this._timer);
+    this._timer = setInterval(() => this._tick(), 1000);
+  },
+
+  render() {
+    const el = document.getElementById('fusoGrid');
+    if (!el) return;
+    if (!this.data.length) { el.innerHTML='<p style="text-align:center;color:var(--muted)">Nenhum fuso configurado.</p>'; return; }
+    const homeEntry = this.data.find(f=>f.home);
+    const homeNow   = homeEntry ? new Date(new Date().toLocaleString('en-US',{timeZone:homeEntry.tz})) : null;
+    el.innerHTML = this.data.map(f => {
+      const now  = new Date(new Date().toLocaleString('en-US',{timeZone:f.tz}));
+      const hh   = String(now.getHours()).padStart(2,'0');
+      const mm   = String(now.getMinutes()).padStart(2,'0');
+      const ss   = String(now.getSeconds()).padStart(2,'0');
+      const date = now.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+      let diffHtml = '';
+      if (!f.home && homeNow) {
+        const diffH = Math.round((now-homeNow)/3600000);
+        diffHtml = `<div class="fuso-diff">${diffH>=0?'+':''}${diffH}h vs ${homeEntry.city.split(' ')[0]}</div>`;
+      }
+      return `
+        <div class="fuso-card${f.home?' home':''}" data-id="${f.id}">
+          ${f.home?'<span class="fuso-home-badge">🏠 Casa</span>':''}
+          <div class="fuso-flag">${f.flag||'🌍'}</div>
+          <div class="fuso-city-name">${f.city}</div>
+          <div class="fuso-time" data-fuso-time="${f.id}">${hh}:${mm}<span class="fuso-seconds">:${ss}</span></div>
+          <div class="fuso-date" data-fuso-date="${f.id}">${date}</div>
+          ${diffHtml}
+        </div>`;
+    }).join('');
+  },
+
+  _tick() {
+    this.data.forEach(f => {
+      const now = new Date(new Date().toLocaleString('en-US',{timeZone:f.tz}));
+      const hh  = String(now.getHours()).padStart(2,'0');
+      const mm  = String(now.getMinutes()).padStart(2,'0');
+      const ss  = String(now.getSeconds()).padStart(2,'0');
+      const tel = document.querySelector(`[data-fuso-time="${f.id}"]`);
+      if (tel) tel.innerHTML = `${hh}:${mm}<span class="fuso-seconds">:${ss}</span>`;
+      const del = document.querySelector(`[data-fuso-date="${f.id}"]`);
+      if (del) del.textContent = now.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+    });
+  },
+
+  openModal() {
+    let form = JSON.parse(JSON.stringify(this.data));
+    let nextId = Math.max(0,...form.map(x=>x.id||0))+1;
+    const PRESETS = ['America/Sao_Paulo','America/Fortaleza','America/Manaus','Europe/Lisbon','Europe/London','Europe/Paris','Asia/Tokyo','Asia/Seoul','Asia/Shanghai','Asia/Singapore','Australia/Sydney','America/New_York','America/Los_Angeles'];
+    const renderList = () => {
+      const c = document.getElementById('fusoFormList');
+      if (!c) return;
+      c.innerHTML = form.map((f,i) => `
+        <div style="background:var(--card-bg,#fff);border-radius:14px;padding:14px;border:1px solid var(--lilac-pastel);margin-bottom:10px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input class="form-input ff-flag" data-i="${i}" value="${f.flag||'🌍'}" style="width:52px;text-align:center;font-size:20px">
+            <input class="form-input ff-city" data-i="${i}" value="${f.city||''}"   placeholder="Nome da cidade" style="flex:1">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer">
+              <input type="checkbox" class="ff-home" data-i="${i}" ${f.home?'checked':''}> 🏠 Casa
+            </label>
+            <button class="act-remove-btn ff-del" data-i="${i}">🗑</button>
+          </div>
+          <select class="form-select ff-tz" data-i="${i}">
+            ${PRESETS.map(tz=>`<option value="${tz}"${f.tz===tz?' selected':''}>${tz}</option>`).join('')}
+          </select>
+        </div>`).join('');
+      const bind = (sel,field) => c.querySelectorAll(sel).forEach(el => {
+        el.addEventListener('input', e=>{ form[parseInt(e.target.dataset.i)][field]=e.target.value; });
+        el.addEventListener('change',e=>{ form[parseInt(e.target.dataset.i)][field]=e.target.value; });
+      });
+      bind('.ff-flag','flag'); bind('.ff-city','city'); bind('.ff-tz','tz');
+      c.querySelectorAll('.ff-home').forEach(cb => cb.addEventListener('change', e => {
+        const idx = parseInt(e.target.dataset.i);
+        if (e.target.checked) form.forEach((f,i)=>{ f.home = i===idx; });
+        else form[idx].home = false;
+        renderList();
+      }));
+      c.querySelectorAll('.ff-del').forEach(btn => btn.addEventListener('click', e => {
+        form.splice(parseInt(e.target.dataset.i),1); renderList();
+      }));
+    };
+    UI.openModal('🕐 Configurar Fusos Horários',
+      `<p style="font-size:13px;color:var(--muted);margin-bottom:14px">Marque 🏠 Casa para o fuso de referência. A diferença de horas é calculada em relação a ele.</p>
+       <div id="fusoFormList"></div>
+       <button class="add-act-inline-btn" id="fusoAddBtn" style="margin-top:10px">＋ Adicionar Cidade</button>`,
+      [{ label:'💾 Salvar', cls:'tb-btn-primary', action:()=>{ AppState.fuso=form; Storage.save(); Fuso.init(); UI.closeModal(); UI.showToast('Fusos atualizados! 🕐','success'); }},
+       { label:'Cancelar', cls:'tb-btn-neutral', action:UI.closeModal }]
+    );
+    setTimeout(()=>{ renderList(); document.getElementById('fusoAddBtn').addEventListener('click',()=>{ form.push({id:nextId++,city:'Nova Cidade',flag:'🌍',tz:'Asia/Tokyo',home:false}); renderList(); }); },50);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
    MÓDULO: LocationAutocomplete
    Autocomplete inteligente para campos de local usando Nominatim
    (OpenStreetMap) — gratuito, sem chave de API, com bias para Japão
@@ -3367,6 +3948,16 @@ function init() {
     Storage.save();
   }
 
+  // Migração: garante que restaurantes existam mesmo em dados antigos salvos
+  if (!AppState.restaurantes) {
+    AppState.restaurantes = JSON.parse(JSON.stringify(DEFAULT_DATA.restaurantes));
+    Storage.save();
+  }
+  // Migração: ingressos, jr pass e fusos
+  if (!AppState.ingressos) { AppState.ingressos = JSON.parse(JSON.stringify(DEFAULT_DATA.ingressos)); Storage.save(); }
+  if (!AppState.jr)        { AppState.jr        = JSON.parse(JSON.stringify(DEFAULT_DATA.jr));        Storage.save(); }
+  if (!AppState.fuso)      { AppState.fuso       = JSON.parse(JSON.stringify(DEFAULT_DATA.fuso));      Storage.save(); }
+
   // 2. Gera o fundo animado com emojis
   const shapes = ['🌸','🍃','✨','🍡','🍵','☁️','🤍'];
   const bgContainer = document.getElementById('floatingBg');
@@ -3407,6 +3998,10 @@ function init() {
   document.getElementById('btnEditHero').addEventListener('click',       () => AdminPanel.openHeroModal());
   document.getElementById('btnEditChecklist').addEventListener('click',  () => AdminPanel.openChecklistModal());
   document.getElementById('btnEditFooter').addEventListener('click',     () => AdminPanel.openFooterModal());
+  document.getElementById('btnEditRestos').addEventListener('click',     () => Restaurantes.openModal());
+  document.getElementById('btnEditIngressos').addEventListener('click',  () => Ingressos.openModal());
+  document.getElementById('btnEditJR').addEventListener('click',         () => JRPass.openPassCostModal());
+  document.getElementById('btnEditFuso').addEventListener('click',       () => Fuso.openModal());
 
   // 7. Fecha modais ao clicar no overlay
   document.getElementById('modalOverlay').addEventListener('click', e => {
@@ -3443,4 +4038,3 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
-
