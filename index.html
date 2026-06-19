@@ -606,6 +606,7 @@
   .tb-btn-neutral { background: var(--border); color: var(--ink); }
   .tb-btn-neutral:hover { background: #ddd; transform: translateY(-1px); }
   .tb-btn-sep { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+  .tb-group-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; align-self: center; }
 
   /* ── Controles por card em modo edição ── */
   .card-admin-controls {
@@ -877,6 +878,7 @@
   .conv-input:focus { border-color: var(--lilac-dark); }
   .conv-currency { font-size: 12px; font-weight: 800; color: var(--muted); min-width: 36px; text-align: right; }
   .conv-rate { font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .conv-manual-row { display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
   .conv-result {
     background: var(--lilac-pastel); border-radius: 12px;
     padding: 12px 14px; text-align: center;
@@ -1024,19 +1026,22 @@
   <input type="text" class="admin-search" id="adminSearch" placeholder="🔍 Buscar cidade ou atividade…">
   <div class="tb-btn-sep"></div>
   <button class="tb-btn tb-btn-primary" id="btnAddSection">＋ Novo Destino</button>
-  <button class="tb-btn tb-btn-green" id="btnExport">⬇ Exportar JSON</button>
-  <button class="tb-btn tb-btn-neutral" id="btnImportTrigger">⬆ Importar JSON</button>
+  <button class="tb-btn tb-btn-green" id="btnExport">⬇ Exportar</button>
+  <button class="tb-btn tb-btn-neutral" id="btnImportTrigger">⬆ Importar</button>
   <input type="file" id="btnImport" accept=".json" style="display:none">
-  <button class="tb-btn tb-btn-danger" id="btnResetData">↩ Restaurar Original</button>
+  <button class="tb-btn tb-btn-danger" id="btnResetData">↩ Reset</button>
   <div class="tb-btn-sep"></div>
-  <button class="tb-btn tb-btn-neutral" id="btnEditDicas">🌸 Editar Dicas</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditHero">🏷 Editar Hero</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditChecklist">✅ Editar Checklist</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditFooter">📝 Editar Rodapé</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditRestos">🍜 Restaurantes</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditIngressos">🎫 Ingressos</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditJR">🚄 JR Pass</button>
-  <button class="tb-btn tb-btn-neutral" id="btnEditFuso">🕐 Fusos</button>
+  <span class="tb-group-label">Geral</span>
+  <button class="tb-btn tb-btn-neutral" id="btnEditHero" title="Editar título, subtítulo, estatísticas e datas da viagem">🏷️ Hero & Datas</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditDicas" title="Editar as dicas de ouro">🌸 Dicas</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditChecklist" title="Editar checklist pré-viagem">✅ Checklist</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditFooter" title="Editar texto do rodapé">📝 Rodapé</button>
+  <div class="tb-btn-sep"></div>
+  <span class="tb-group-label">Seções</span>
+  <button class="tb-btn tb-btn-neutral" id="btnEditRestos" title="Adicionar/remover/editar restaurantes por cidade">🍜 Restaurantes</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditIngressos" title="Gerenciar ingressos e reservas">🎫 Ingressos</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditJR" title="Editar preços dos passes JR e trajetos">🚄 JR Pass</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditFuso" title="Configurar fusos horários exibidos">🕐 Fusos</button>
 </div>
 
 <header class="hero" id="heroSection"></header>
@@ -1135,6 +1140,11 @@
     <span class="conv-currency">JPY ¥</span>
   </div>
   <div class="conv-rate" id="convRate">Buscando cotação…</div>
+  <div class="conv-manual-row">
+    <span style="font-size:11px;color:var(--muted);font-weight:700">Taxa manual:</span>
+    <input id="convManualRate" type="number" step="0.1" placeholder="¥ por R$" style="width:80px;padding:3px 8px;border-radius:8px;border:1px solid var(--border);font-size:12px;text-align:center">
+    <button onclick="Converter.setManualRate(document.getElementById('convManualRate').value)" style="font-size:11px;padding:3px 10px;border-radius:8px;border:none;background:var(--lilac-dark);color:#fff;cursor:pointer;font-weight:700">OK</button>
+  </div>
 </div>
 
 <!-- Toast container -->
@@ -1661,7 +1671,7 @@ const Renderer = {
         <div class="card-day-num">${day.num}</div>
         <div class="card-meta">
           <div class="card-title">${day.date} — ${day.title}</div>
-          <div class="card-city">📍 ${day.city}</div>
+          <div class="card-city">📍 ${day.city}${day.hotel ? ` &nbsp;·&nbsp; 🏨 ${day.hotel}` : ''}</div>
         </div>
         <span class="drag-handle" title="Arrastar para reordenar">⠿</span>
         <div class="card-arrow">▾</div>
@@ -2025,9 +2035,15 @@ const AdminPanel = {
           <input class="form-input" id="f_city" value="${day.city}">
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">URL da Imagem</label>
-        <input class="form-input" id="f_img" value="${day.img}" placeholder="https://…">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">🏨 Hotel / Hospedagem</label>
+          <input class="form-input" id="f_hotel" value="${day.hotel||''}" placeholder="Ex: Shinjuku Granbell Hotel">
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL da Imagem</label>
+          <input class="form-input" id="f_img" value="${day.img}" placeholder="https://…">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Atividades</label>
@@ -2041,13 +2057,14 @@ const AdminPanel = {
       [
         { label: isNew ? '＋ Adicionar Dia' : '💾 Salvar Alterações', cls: 'tb-btn-primary', action: () => {
           const updated = {
-            date: document.getElementById('f_date').value.trim(),
-            num: document.getElementById('f_num').value.trim(),
+            date:  document.getElementById('f_date').value.trim(),
+            num:   document.getElementById('f_num').value.trim(),
             title: document.getElementById('f_title').value.trim(),
-            city: document.getElementById('f_city').value.trim(),
-            img: document.getElementById('f_img').value.trim(),
-            tip: document.getElementById('f_tip').value.trim(),
-            acts: formActs
+            city:  document.getElementById('f_city').value.trim(),
+            hotel: document.getElementById('f_hotel').value.trim(),
+            img:   document.getElementById('f_img').value.trim(),
+            tip:   document.getElementById('f_tip').value.trim(),
+            acts:  formActs
           };
           if(!updated.title) { UI.showToast('Preencha o título do dia.', 'error'); return; }
 
@@ -2856,8 +2873,17 @@ const Converter = {
   async fetchRate() {
     if (this._fetched && this.rate) return;
     this._fetched = true;
+    // Se o usuário salvou uma taxa manual, usa ela primeiro
+    if (AppState.manualExchangeRate) {
+      this.rate = AppState.manualExchangeRate;
+      const el = document.getElementById('convRate');
+      if (el) { el.textContent = `1 BRL = ¥${this.rate.toFixed(2)} · taxa manual`; el.style.color = '#6b8f5e'; }
+      const mi = document.getElementById('convManualRate');
+      if (mi) mi.value = this.rate;
+      this.updateFromBRL();
+    }
     const el = document.getElementById('convRate');
-    if (el) el.textContent = 'Buscando cotação…';
+    if (!AppState.manualExchangeRate && el) el.textContent = 'Buscando cotação…';
 
     // Tenta múltiplas APIs em sequência até conseguir
     const APIS = [
@@ -2926,6 +2952,17 @@ const Converter = {
       ? `R$ ${brl.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}`
       : '— R$';
     if (brlEl) brlEl.value = this.rate ? brl.toFixed(2) : '';
+  },
+
+  setManualRate(rate) {
+    const r = parseFloat(rate);
+    if (!r || isNaN(r) || r <= 0) return;
+    this.rate = r;
+    const el = document.getElementById('convRate');
+    if (el) { el.textContent = `1 BRL = ¥${r.toFixed(2)} · taxa manual`; el.style.color = '#6b8f5e'; }
+    this.updateFromBRL();
+    AppState.manualExchangeRate = r;
+    Storage.save();
   },
 
   toggle() {
