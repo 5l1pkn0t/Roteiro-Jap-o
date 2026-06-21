@@ -529,6 +529,116 @@
   .fuso-diff { font-size:11px; color:var(--lilac-dark); font-weight:800; margin-top:4px; background:var(--lilac-pastel); border-radius:10px; padding:2px 8px; display:inline-block; }
   .fuso-home-badge { position:absolute; top:-8px; left:50%; transform:translateX(-50%); background:var(--lilac-dark); color:#fff; font-size:10px; font-weight:800; padding:2px 10px; border-radius:10px; white-space:nowrap; }
 
+  /* ── LINHA DO TEMPO VISUAL ── */
+  .timeline-visual-section { margin-top: 80px; }
+  .tlv-wrap { max-width: 900px; margin: 0 auto; }
+  .tlv-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 28px; }
+  .tlv-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ink); }
+  .tlv-legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .tlv-grid { display: flex; flex-direction: column; gap: 6px; }
+  .tlv-row { display: flex; align-items: center; gap: 10px; }
+  .tlv-daynum { font-size: 11px; font-weight: 800; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
+  .tlv-bar-wrap { flex: 1; position: relative; }
+  .tlv-bar {
+    height: 36px; border-radius: 10px; display: flex; align-items: center;
+    padding: 0 12px; gap: 8px; cursor: pointer;
+    transition: transform .15s, box-shadow .15s; position: relative; overflow: hidden;
+  }
+  .tlv-bar:hover { transform: scaleY(1.08) translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 2; }
+  .tlv-bar-emoji { font-size: 14px; flex-shrink: 0; }
+  .tlv-bar-title { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+  .tlv-bar-date { font-size: 10px; color: rgba(255,255,255,0.8); flex-shrink: 0; margin-left: auto; }
+  .tlv-tooltip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: rgba(30,20,50,0.92); color: #fff; border-radius: 10px;
+    padding: 8px 12px; font-size: 12px; white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity .15s; z-index: 99; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .tlv-bar:hover .tlv-tooltip { opacity: 1; }
+  .tlv-month-label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 6px 38px; }
+
+  /* ── FRASES EM JAPONÊS ── */
+  .frases-section { margin-top: 80px; }
+  .frases-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
+  .frases-filter-btn { padding: 7px 18px; border-radius: 20px; border: 1.5px solid var(--lilac-pastel); background: #fff; color: var(--lilac-dark); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .18s; }
+  .frases-filter-btn.active, .frases-filter-btn:hover { background: var(--lilac-dark); color: #fff; border-color: var(--lilac-dark); }
+  .frases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; max-width: 1100px; margin: 0 auto; }
+  .frase-card {
+    background: var(--card-bg, #fff); border-radius: 18px; border: 1.5px solid var(--lilac-pastel);
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 6px;
+    transition: transform .2s, box-shadow .2s; cursor: pointer; position: relative;
+  }
+  .frase-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(163,144,228,.15); }
+  .frase-card:active { transform: scale(.98); }
+  .frase-pt { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .frase-jp { font-size: 20px; font-weight: 700; color: var(--lilac-dark); line-height: 1.3; }
+  .frase-romaji { font-size: 13.5px; color: var(--ink); font-style: italic; }
+  .frase-tip { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .frase-copy-badge {
+    position: absolute; top: 10px; right: 12px;
+    font-size: 11px; background: var(--lilac-pastel); color: var(--lilac-dark);
+    border-radius: 8px; padding: 2px 8px; font-weight: 700; opacity: 0;
+    transition: opacity .2s;
+  }
+  .frase-card:hover .frase-copy-badge { opacity: 1; }
+  .frase-copied { background: #d1e7dd !important; color: #0a3622 !important; }
+
+  /* ── QUICK NAV ── */
+  .quick-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 850;
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--lilac-pastel);
+    box-shadow: 0 -4px 20px rgba(163,144,228,0.12);
+    padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  }
+  .quick-nav-inner {
+    display: flex; align-items: center;
+    gap: 2px; padding: 0 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .quick-nav-inner::-webkit-scrollbar { display: none; }
+  .qn-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 6px 12px; border-radius: 12px; border: none; background: transparent;
+    cursor: pointer; transition: all .18s;
+    min-width: 58px; flex-shrink: 0;
+    color: var(--muted); font-size: 20px;
+    scroll-snap-align: start;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .qn-btn span {
+    font-size: 9px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--muted); transition: color .18s;
+    white-space: nowrap;
+  }
+  .qn-btn:hover, .qn-btn.active { background: var(--lilac-pastel); }
+  .qn-btn.active span, .qn-btn.active { color: var(--lilac-dark); }
+
+  /* Sombra nas bordas indicando que dá pra rolar */
+  .quick-nav::before, .quick-nav::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 24px;
+    pointer-events: none; z-index: 1; transition: opacity .2s;
+  }
+  .quick-nav::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,.9), transparent);
+  }
+  .quick-nav::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,.9), transparent);
+  }
+
+  /* Empurra conteúdo para cima */
+  body.has-quick-nav main { padding-bottom: 80px; }
+  body.has-quick-nav .fab-group { bottom: 90px; }
+  body.has-quick-nav #fab-maps { bottom: 90px; }
+  body.has-quick-nav .admin-toolbar { bottom: 64px; }
+
   .footer {
     margin-top: 80px; text-align: center; font-size: 16px; color: var(--muted);
     padding: 40px 20px; font-family: 'Lora', serif; font-style: italic;
@@ -1042,6 +1152,7 @@
   <button class="tb-btn tb-btn-neutral" id="btnEditIngressos" title="Gerenciar ingressos e reservas">🎫 Ingressos</button>
   <button class="tb-btn tb-btn-neutral" id="btnEditJR" title="Editar preços dos passes JR e trajetos">🚄 JR Pass</button>
   <button class="tb-btn tb-btn-neutral" id="btnEditFuso" title="Configurar fusos horários exibidos">🕐 Fusos</button>
+  <button class="tb-btn tb-btn-neutral" id="btnEditFrases" title="Editar frases úteis em japonês">🌐 Frases JP</button>
 </div>
 
 <header class="hero" id="heroSection"></header>
@@ -1074,7 +1185,7 @@
     <div class="checklist-groups" id="checklistGroups"></div>
   </section>
 
-  <section class="dicas-section">
+  <section class="dicas-section" id="dicasGrid">
     <h2 class="dicas-heading">🌸 Dicas de Ouro 🌸</h2>
     <div class="dicas-grid" id="dicasGrid"></div>
   </section>
@@ -1109,6 +1220,21 @@
     <div class="fuso-grid" id="fusoGrid"></div>
   </section>
 
+  <!-- Linha do tempo visual -->
+  <section class="timeline-visual-section" id="timelineVisualSection">
+    <h2 class="section-heading-shared">📅 Linha do Tempo da Viagem</h2>
+    <p class="section-sub-shared">Visão panorâmica dos 23 dias em um só lugar</p>
+    <div class="tlv-wrap" id="tlvWrap"></div>
+  </section>
+
+  <!-- Frases úteis em japonês -->
+  <section class="frases-section" id="frasesSection">
+    <h2 class="section-heading-shared">🌐 Frases Úteis em Japonês</h2>
+    <p class="section-sub-shared">Essenciais para se virar no dia a dia</p>
+    <div class="frases-filters" id="frasesFilters"></div>
+    <div class="frases-grid" id="frasesGrid"></div>
+  </section>
+
   <footer class="footer" id="footerEl">
     Roteiro desenhado com <span class="heart">💜</span> para celebrar o amor. Uma viagem inesquecível espera por vocês!
   </footer>
@@ -1119,6 +1245,22 @@
 
 <!-- Botão flutuante para ativar/desativar modo edição -->
 <button class="admin-toggle-btn" id="adminToggleBtn" title="Modo Edição">✏️</button>
+
+<!-- Barra de navegação rápida -->
+<nav class="quick-nav" id="quickNav">
+  <div class="quick-nav-inner">
+    <button class="qn-btn" data-target="heroSection"           title="Início">🏠<span>Início</span></button>
+    <button class="qn-btn" data-target="routeSection"          title="Roteiro">🗓️<span>Roteiro</span></button>
+    <button class="qn-btn" data-target="checklistSection"      title="Checklist">✅<span>Checklist</span></button>
+    <button class="qn-btn" data-target="dicasGrid"             title="Dicas">🌸<span>Dicas</span></button>
+    <button class="qn-btn" data-target="restoSection"          title="Restaurantes">🍜<span>Resto</span></button>
+    <button class="qn-btn" data-target="ingressosSection"      title="Ingressos">🎫<span>Ingressos</span></button>
+    <button class="qn-btn" data-target="jrSection"             title="JR Pass">🚄<span>JR Pass</span></button>
+    <button class="qn-btn" data-target="fusoSection"           title="Fuso Horário">🕐<span>Fuso</span></button>
+    <button class="qn-btn" data-target="timelineVisualSection" title="Linha do Tempo">📅<span>Timeline</span></button>
+    <button class="qn-btn" data-target="frasesSection"         title="Frases JP">🌐<span>Frases</span></button>
+  </div>
+</nav>
 
 <!-- FAB grupo esquerdo: compartilhar, conversor, instalar -->
 <div class="fab-group" id="fabGroup">
@@ -1452,6 +1594,38 @@ const DEFAULT_DATA = {
     { id:2, city:'Tóquio', flag:'🇯🇵', tz:'Asia/Tokyo', home:false },
     { id:3, city:'Quioto', flag:'🇯🇵', tz:'Asia/Tokyo', home:false },
     { id:4, city:'Osaka', flag:'🇯🇵', tz:'Asia/Tokyo', home:false }
+  ],
+  frases: [
+    { cat:'🙏 Básico', pt:'Olá / Bom dia', jp:'こんにちは', romaji:'Konnichiwa', tip:'Use também: おはよう (Ohayou) de manhã e こんばんは (Konbanwa) à noite' },
+    { cat:'🙏 Básico', pt:'Obrigado(a)', jp:'ありがとうございます', romaji:'Arigatou gozaimasu', tip:'Versão informal: ありがとう (Arigatou)' },
+    { cat:'🙏 Básico', pt:'Com licença / Desculpe', jp:'すみません', romaji:'Sumimasen', tip:'Também serve para chamar a atenção do garçom ou vendedor' },
+    { cat:'🙏 Básico', pt:'Não entendo', jp:'わかりません', romaji:'Wakarimasen', tip:'Muito útil quando alguém falar rápido demais' },
+    { cat:'🙏 Básico', pt:'Você fala inglês?', jp:'英語を話せますか？', romaji:'Eigo wo hanasemasu ka?', tip:'A maioria dos jovens entende um pouco de inglês' },
+    { cat:'🙏 Básico', pt:'Por favor (ao pedir algo)', jp:'お願いします', romaji:'Onegaishimasu', tip:'Diga ao mostrar algo no celular ou apontar para o menu' },
+    { cat:'🙏 Básico', pt:'Sim / Não', jp:'はい / いいえ', romaji:'Hai / Iie', tip:'Japoneses costumam dizer Hai (sim) mesmo quando não concordam totalmente' },
+    { cat:'🍜 Restaurante', pt:'Uma mesa para dois', jp:'二人です', romaji:'Futari desu', tip:'Mostre dois dedos para reforçar' },
+    { cat:'🍜 Restaurante', pt:'Isso, por favor', jp:'これをください', romaji:'Kore wo kudasai', tip:'Aponte para o item no menu ao dizer' },
+    { cat:'🍜 Restaurante', pt:'Estava delicioso!', jp:'おいしかった！', romaji:'Oishikatta!', tip:'Os japoneses adoram receber esse elogio' },
+    { cat:'🍜 Restaurante', pt:'A conta, por favor', jp:'お会計をお願いします', romaji:'Okaikei wo onegaishimasu', tip:'Ou faça gesto de X com os dedos indicadores' },
+    { cat:'🍜 Restaurante', pt:'Sem glúten / alergia', jp:'グルテンなし', romaji:'Guruten nashi', tip:'Para outras alergias: アレルギーがあります (Arerugii ga arimasu)' },
+    { cat:'🍜 Restaurante', pt:'Onde fica o banheiro?', jp:'トイレはどこですか？', romaji:'Toire wa doko desu ka?', tip:'Banheiros no Japão são impecáveis e gratuitos' },
+    { cat:'🚉 Transporte', pt:'Para ___, por favor', jp:'___までお願いします', romaji:'___ made onegaishimasu', tip:'Use no táxi mostrando o destino no celular' },
+    { cat:'🚉 Transporte', pt:'Onde fica a estação?', jp:'駅はどこですか？', romaji:'Eki wa doko desu ka?', tip:'Metrô = 地下鉄 (Chikatetsu)' },
+    { cat:'🚉 Transporte', pt:'Quanto tempo até ___?', jp:'___まで何分かかりますか？', romaji:'___ made nan pun kakarimasu ka?', tip:'Substitua ___ pelo destino' },
+    { cat:'🚉 Transporte', pt:'Ultima entrada, por favor', jp:'最終乗車をお願いします', romaji:'Saishuu jousha wo onegaishimasu', tip:'Útil se estiver quase perdendo o último trem' },
+    { cat:'🛍️ Compras', pt:'Quanto custa?', jp:'いくらですか？', romaji:'Ikura desu ka?', tip:'Ou mostre um papel para escreverem o valor' },
+    { cat:'🛍️ Compras', pt:'Tem tamanho maior/menor?', jp:'大きい/小さいサイズはありますか？', romaji:'Ookii/Chiisai saizu wa arimasu ka?', tip:'Tamanhos japoneses são menores que os brasileiros' },
+    { cat:'🛍️ Compras', pt:'Pode fazer mais barato?', jp:'もう少し安くなりますか？', romaji:'Mou sukoshi yasuku narimasu ka?', tip:'Barganha é rara no Japão, mas não custa tentar' },
+    { cat:'🛍️ Compras', pt:'Posso experimentar?', jp:'試着できますか？', romaji:'Shichaku dekimasu ka?', tip:'Em lojas de roupas e sapatos' },
+    { cat:'🛍️ Compras', pt:'Aceita cartão?', jp:'クレジットカードは使えますか？', romaji:'Kurejitto kaado wa tsukaemasu ka?', tip:'Muitos lugares pequenos são só dinheiro (現金 / Genkin)' },
+    { cat:'🚨 Emergência', pt:'Preciso de ajuda!', jp:'助けてください！', romaji:'Tasukete kudasai!', tip:'Em caso de emergência real' },
+    { cat:'🚨 Emergência', pt:'Chame a polícia!', jp:'警察を呼んでください！', romaji:'Keisatsu wo yonde kudasai!', tip:'Polícia: 110 | Bombeiro/SAMU: 119' },
+    { cat:'🚨 Emergência', pt:'Estou doente', jp:'具合が悪いです', romaji:'Guai ga warui desu', tip:'Hospital: 病院 (Byouin)' },
+    { cat:'🚨 Emergência', pt:'Perdi meu passaporte', jp:'パスポートをなくしました', romaji:'Pasupooto wo nakushimashita', tip:'Vá ao koban (派出所) mais próximo — pequenas delegacias espalhadas pela cidade' },
+    { cat:'💕 Romântico', pt:'Você é lindo(a)', jp:'きれいですね', romaji:'Kirei desu ne', tip:'Para o(a) parceiro(a) — os japoneses ao redor vão achar adorável!' },
+    { cat:'💕 Romântico', pt:'Que lugar lindo!', jp:'すごくきれいですね！', romaji:'Sugoku kirei desu ne!', tip:'Perfeito para o momento do pôr do sol em Hakone ou Miyajima' },
+    { cat:'💕 Romântico', pt:'Foi incrível', jp:'最高でした！', romaji:'Saikou deshita!', tip:'Para exclamar após uma experiência incrível' },
+    { cat:'💕 Romântico', pt:'Estou feliz demais', jp:'とても幸せです', romaji:'Totemo shiawase desu', tip:'Uma frase singela que resume a lua de mel 💜' }
   ]
 };
 
@@ -1541,6 +1715,8 @@ const Renderer = {
     Ingressos.render();
     JRPass.render();
     Fuso.init();
+    TimelineVisual.render();
+    Frases.render();
   },
 
   /** Renderiza o rodapé */
@@ -3821,6 +3997,176 @@ const Fuso = {
 };
 
 /* ══════════════════════════════════════════════════════════════
+   MÓDULO: TimelineVisual — Linha do tempo panorâmica da viagem
+══════════════════════════════════════════════════════════════ */
+const TimelineVisual = {
+  // Cor por seção (index)
+  COLORS: ['#a390e4','#6db89a','#e4a390','#90a8e4','#e4c490','#c490e4','#90e4c4','#e49090'],
+
+  render() {
+    const el = document.getElementById('tlvWrap');
+    if (!el) return;
+    const sections = AppState.sections || [];
+    if (!sections.length) { el.innerHTML = '<p style="text-align:center;color:var(--muted)">Nenhum dia cadastrado.</p>'; return; }
+
+    // Legenda de cidades
+    const legendHtml = sections.map((s, i) => `
+      <div class="tlv-legend-item">
+        <div class="tlv-legend-dot" style="background:${this.COLORS[i % this.COLORS.length]}"></div>
+        ${s.emoji} ${s.label}
+      </div>`).join('');
+
+    // Dias agrupados por mês
+    let lastMonth = '';
+    const rowsHtml = sections.map((sec, si) => {
+      const color = this.COLORS[si % this.COLORS.length];
+      return (sec.days || []).map(day => {
+        // Detectar mês
+        const monthMatch = day.date?.match(/\/(\d+)/);
+        const month = monthMatch ? (monthMatch[1] === '10' ? '🍂 Outubro' : '🍁 Novembro') : '';
+        const monthLabel = month !== lastMonth ? `<div class="tlv-month-label">${month}</div>` : '';
+        lastMonth = month;
+
+        // Resumo de atividades para tooltip
+        const actsSummary = (day.acts || []).map(a => a.t).join(' · ') || '';
+
+        return `${monthLabel}
+          <div class="tlv-row">
+            <div class="tlv-daynum">${day.num || ''}</div>
+            <div class="tlv-bar-wrap">
+              <div class="tlv-bar" style="background:linear-gradient(135deg,${color}dd,${color}99)"
+                onclick="document.querySelector('[data-section-id=\\'${sec.id}\\'] .day-card')?.scrollIntoView({behavior:'smooth'})">
+                <span class="tlv-bar-emoji">${sec.emoji}</span>
+                <span class="tlv-bar-title">${day.title}</span>
+                <span class="tlv-bar-date">${day.date}</span>
+                <div class="tlv-tooltip">📍 ${day.city}${day.hotel ? ' · 🏨 '+day.hotel : ''}${actsSummary ? '<br>'+actsSummary : ''}</div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }).join('');
+
+    el.innerHTML = `
+      <div class="tlv-legend">${legendHtml}</div>
+      <div class="tlv-grid">${rowsHtml}</div>`;
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO: Frases — Guia de frases úteis em japonês
+══════════════════════════════════════════════════════════════ */
+const Frases = {
+  _activecat: 'Todas',
+
+  get data() { return AppState.frases || []; },
+
+  cats() {
+    return ['Todas', ...new Set(this.data.map(f => f.cat))];
+  },
+
+  render() {
+    this._renderFilters();
+    this._renderGrid();
+  },
+
+  _renderFilters() {
+    const el = document.getElementById('frasesFilters');
+    if (!el) return;
+    el.innerHTML = this.cats().map(c => `
+      <button class="frases-filter-btn${this._activecat === c ? ' active' : ''}" data-cat="${c}">${c}</button>
+    `).join('');
+    el.querySelectorAll('.frases-filter-btn').forEach(btn => btn.addEventListener('click', () => {
+      this._activecat = btn.dataset.cat;
+      this._renderFilters();
+      this._renderGrid();
+    }));
+  },
+
+  _renderGrid() {
+    const el = document.getElementById('frasesGrid');
+    if (!el) return;
+    const list = this._activecat === 'Todas'
+      ? this.data
+      : this.data.filter(f => f.cat === this._activecat);
+
+    el.innerHTML = list.map((f, i) => `
+      <div class="frase-card" onclick="Frases._copy(${i}, this)" title="Toque para copiar o japonês">
+        <span class="frase-copy-badge">📋 Copiar</span>
+        <div class="frase-pt">${f.pt}</div>
+        <div class="frase-jp">${f.jp}</div>
+        <div class="frase-romaji">${f.romaji}</div>
+        ${f.tip ? `<div class="frase-tip">💡 ${f.tip}</div>` : ''}
+      </div>`).join('');
+  },
+
+  _copy(idx, el) {
+    const f = this.data.filter(x => this._activecat === 'Todas' || x.cat === this._activecat)[idx];
+    if (!f) return;
+    navigator.clipboard?.writeText(f.jp).catch(() => {});
+    const badge = el.querySelector('.frase-copy-badge');
+    if (badge) {
+      badge.textContent = '✅ Copiado!';
+      badge.classList.add('frase-copied');
+      setTimeout(() => { badge.textContent = '📋 Copiar'; badge.classList.remove('frase-copied'); }, 1500);
+    }
+  },
+
+  openModal() {
+    let form = JSON.parse(JSON.stringify(this.data));
+    let nextId = form.length;
+    const CATS = ['🙏 Básico','🍜 Restaurante','🚉 Transporte','🛍️ Compras','🚨 Emergência','💕 Romântico'];
+
+    const renderList = () => {
+      const c = document.getElementById('frasesFormList');
+      if (!c) return;
+      c.innerHTML = form.map((f, i) => `
+        <div style="background:var(--card-bg,#fff);border-radius:14px;padding:14px;border:1px solid var(--lilac-pastel);margin-bottom:10px">
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+            <select class="form-select ff-cat" data-i="${i}" style="flex:1">
+              ${CATS.map(cat=>`<option value="${cat}"${f.cat===cat?' selected':''}>${cat}</option>`).join('')}
+            </select>
+            <button class="act-remove-btn ff-del" data-i="${i}">🗑</button>
+          </div>
+          <input class="form-input ff-pt"     data-i="${i}" value="${(f.pt||'').replace(/"/g,'&quot;')}"     placeholder="Português (ex: Obrigado)" style="margin-bottom:6px">
+          <input class="form-input ff-jp"     data-i="${i}" value="${(f.jp||'').replace(/"/g,'&quot;')}"     placeholder="日本語" style="margin-bottom:6px;font-size:18px">
+          <input class="form-input ff-romaji" data-i="${i}" value="${(f.romaji||'').replace(/"/g,'&quot;')}" placeholder="Romaji (ex: Arigatou)" style="margin-bottom:6px">
+          <input class="form-input ff-tip"    data-i="${i}" value="${(f.tip||'').replace(/"/g,'&quot;')}"    placeholder="Dica opcional">
+        </div>`).join('');
+
+      const bind = (sel, field) => c.querySelectorAll(sel).forEach(el => {
+        el.addEventListener('input',  e => { form[parseInt(e.target.dataset.i)][field] = e.target.value; });
+        el.addEventListener('change', e => { form[parseInt(e.target.dataset.i)][field] = e.target.value; });
+      });
+      bind('.ff-cat','cat'); bind('.ff-pt','pt'); bind('.ff-jp','jp');
+      bind('.ff-romaji','romaji'); bind('.ff-tip','tip');
+      c.querySelectorAll('.ff-del').forEach(btn => btn.addEventListener('click', e => {
+        form.splice(parseInt(e.target.dataset.i), 1); renderList();
+      }));
+    };
+
+    UI.openModal('🌐 Editar Frases em Japonês',
+      `<div id="frasesFormList" style="max-height:55vh;overflow-y:auto;padding-right:4px"></div>
+       <button class="add-act-inline-btn" id="frasesAddBtn" style="margin-top:10px">＋ Adicionar Frase</button>`,
+      [
+        { label:'💾 Salvar', cls:'tb-btn-primary', action:() => {
+          AppState.frases = form; Storage.save(); Frases.render(); UI.closeModal();
+          UI.showToast('Frases atualizadas! 🌐','success');
+        }},
+        { label:'Cancelar', cls:'tb-btn-neutral', action:UI.closeModal }
+      ]
+    );
+    setTimeout(() => {
+      renderList();
+      document.getElementById('frasesAddBtn').addEventListener('click', () => {
+        form.push({ cat:'🙏 Básico', pt:'', jp:'', romaji:'', tip:'' });
+        renderList();
+        document.getElementById('frasesFormList').scrollTop = 99999;
+      });
+    }, 50);
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
    MÓDULO: LocationAutocomplete
    Autocomplete inteligente para campos de local usando Nominatim
    (OpenStreetMap) — gratuito, sem chave de API, com bias para Japão
@@ -3973,6 +4319,61 @@ const LocationAutocomplete = {
 };
 
 
+/* ══════════════════════════════════════════════════════════════
+   MÓDULO: QuickNav — Barra de navegação rápida com scroll spy
+══════════════════════════════════════════════════════════════ */
+const QuickNav = {
+  _observer: null,
+
+  init() {
+    document.body.classList.add('has-quick-nav');
+    const inner = document.querySelector('.quick-nav-inner');
+
+    // Clique nos botões — scroll suave até a seção
+    document.querySelectorAll('.qn-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.target);
+        if (!target) return;
+        const top = target.getBoundingClientRect().top + window.scrollY - 16;
+        window.scrollTo({ top, behavior: 'smooth' });
+        this._setActive(btn, inner);
+      });
+    });
+
+    // Scroll spy — destaca o botão da seção visível
+    const targets = [...document.querySelectorAll('.qn-btn')]
+      .map(btn => document.getElementById(btn.dataset.target))
+      .filter(Boolean);
+
+    this._observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          const activeBtn = document.querySelector(`.qn-btn[data-target="${id}"]`);
+          if (activeBtn) this._setActive(activeBtn, inner);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '-10% 0px -70% 0px' });
+
+    targets.forEach(el => this._observer.observe(el));
+
+    // Scroll inicial para o início
+    if (inner) inner.scrollLeft = 0;
+  },
+
+  _setActive(btn, inner) {
+    document.querySelectorAll('.qn-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Centraliza o botão ativo na barra
+    if (inner) {
+      const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
+      const scrollTarget = btnCenter - inner.offsetWidth / 2;
+      inner.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+    }
+  }
+};
+
+
 function init() {
   // 1. Carrega dados: localStorage tem prioridade sobre os defaults
   const saved = Storage.load();
@@ -3994,6 +4395,7 @@ function init() {
   if (!AppState.ingressos) { AppState.ingressos = JSON.parse(JSON.stringify(DEFAULT_DATA.ingressos)); Storage.save(); }
   if (!AppState.jr)        { AppState.jr        = JSON.parse(JSON.stringify(DEFAULT_DATA.jr));        Storage.save(); }
   if (!AppState.fuso)      { AppState.fuso       = JSON.parse(JSON.stringify(DEFAULT_DATA.fuso));      Storage.save(); }
+  if (!AppState.frases)    { AppState.frases     = JSON.parse(JSON.stringify(DEFAULT_DATA.frases));    Storage.save(); }
 
   // 2. Gera o fundo animado com emojis
   const shapes = ['🌸','🍃','✨','🍡','🍵','☁️','🤍'];
@@ -4039,6 +4441,7 @@ function init() {
   document.getElementById('btnEditIngressos').addEventListener('click',  () => Ingressos.openModal());
   document.getElementById('btnEditJR').addEventListener('click',         () => JRPass.openPassCostModal());
   document.getElementById('btnEditFuso').addEventListener('click',       () => Fuso.openModal());
+  document.getElementById('btnEditFrases').addEventListener('click',     () => Frases.openModal());
 
   // 7. Fecha modais ao clicar no overlay
   document.getElementById('modalOverlay').addEventListener('click', e => {
@@ -4063,6 +4466,7 @@ function init() {
   Checklist.render();
   Converter.initEvents();
   PWAManager.init();
+  QuickNav.init();
 
   // FAB: Compartilhar
   document.getElementById('fabShare')?.addEventListener('click', () => ShareTool.share());
